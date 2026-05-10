@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+{% block title %}My Orders — SmartGadget{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container"><h1>My Orders</h1><p>Track and manage your order history</p></div></div>
+<div class="container">
+  <div class="orders-toolbar">
+    <input type="text" placeholder="Search orders..." oninput="filterOrders(this.value)"/>
+    <select onchange="filterOrders(null, this.value)"><option value="">All Status</option><option>Delivered</option><option>Shipped</option><option>Preparing</option></select>
+  </div>
+  <div class="orders-table-wrap">
+    <table class="orders-table" id="ordersTable">
+      <thead><tr><th>Order ID</th><th>Products</th><th>Date</th><th>Total</th><th>Payment</th><th>Delivery</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td><strong>{{ order.id }}</strong></td>
+          <td>{{ order.products|join(', ') }}</td>
+          <td>{{ order.date }}</td>
+          <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
+          <td><span class="badge-{{ 'success' if order.payment == 'Paid' else 'warning' }}">{{ order.payment }}</span></td>
+          <td><span class="delivery-badge {{ order.delivery|lower|replace(' ', '-') }}">{{ order.delivery }}</span></td>
+          <td>
+            <a href="{{ url_for('user.profile') }}" class="btn-sm"><i class="fas fa-truck"></i> Track</a>
+            <button class="btn-sm outline" onclick="showToast('Receipt downloaded!', 'success')"><i class="fas fa-download"></i></button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

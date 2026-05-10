@@ -1,0 +1,97 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Products — SmartGadget{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>All Products</h1>
+    <p>Browse our complete collection of tech gadgets</p>
+  </div>
+</div>
+
+<section class="products-page">
+  <div class="container">
+    <!-- Toolbar -->
+    <div class="products-toolbar">
+      <div class="toolbar-left">
+        <div class="search-bar-full">
+          <i class="fas fa-search"></i>
+          <input type="text" id="productSearch" placeholder="Search products..." oninput="filterProducts()"/>
+        </div>
+        <div class="filter-group">
+          <label>Category</label>
+          <select id="categoryFilter" onchange="filterProducts()">
+            {% for cat in categories %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select id="sortFilter" onchange="filterProducts()">
+            <option value="default">Default</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Top Rated</option>
+            <option value="popular">Most Popular</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <span id="productCount">{{ products|length }} products</span>
+        <div class="view-toggle">
+          <button id="gridViewBtn" class="active" onclick="setView('grid')"><i class="fas fa-th-large"></i></button>
+          <button id="listViewBtn" onclick="setView('list')"><i class="fas fa-list"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid large" id="productsContainer">
+      {% for product in products %}
+      <div class="product-card" data-category="{{ product.category }}" data-price="{{ product.price }}" data-rating="{{ product.rating }}" data-views="{{ product.views }}" data-name="{{ product.name|lower }}">
+        {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+        <button class="wishlist-btn" onclick="toggleWishlist(this, {{ product.id }})"><i class="far fa-heart"></i></button>
+        <div class="product-image-wrap">
+          <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/>
+          <div class="product-overlay">
+            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn"><i class="fas fa-eye"></i> View Details</a>
+          </div>
+        </div>
+        <div class="product-info">
+          <span class="product-cat">{{ product.category }}</span>
+          <h3 class="product-name"><a href="{{ url_for('user.product_details', product_id=product.id) }}">{{ product.name }}</a></h3>
+          <div class="product-rating">
+            <div class="stars">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div>
+            <span>({{ product.reviews }})</span>
+          </div>
+          <div class="product-footer">
+            <div class="product-price">
+              <span class="price">${{ "%.2f"|format(product.price) }}</span>
+              {% if product.original_price %}<span class="original">${{ "%.2f"|format(product.original_price) }}</span>{% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
+              <i class="fas fa-cart-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display:none">
+      <i class="fas fa-search"></i>
+      <h3>No products found</h3>
+      <p>Try adjusting your search or filter criteria</p>
+      <button onclick="resetFilters()" class="btn-primary">Reset Filters</button>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination">
+      <button class="page-btn active">1</button>
+      <button class="page-btn">2</button>
+      <button class="page-btn">3</button>
+      <button class="page-btn">→</button>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/products.js') }}"></script>{% endblock %}

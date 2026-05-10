@@ -1,0 +1,55 @@
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <a href="#" class="footer-logo"><div class="logo-icon"><i class="fas fa-bolt"></i></div><span>Smart<strong>Gadget</strong></span></a>
+      <p>Your one-stop destination for the latest and greatest tech gadgets. Quality products, fast delivery, exceptional service.</p>
+      <div class="footer-socials">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-youtube"></i></a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="{{ url_for('user.home') }}">Home</a></li>
+        <li><a href="{{ url_for('user.products') }}">Products</a></li>
+        <li><a href="{{ url_for('user.orders') }}">Orders</a></li>
+        <li><a href="{{ url_for('user.wishlist') }}">Wishlist</a></li>
+      </ul>
+    </div>
+    <div class="footer-links">
+      <h4>Categories</h4>
+      <ul>
+        <li><a href="#">Audio</a></li>
+        <li><a href="#">Laptops</a></li>
+        <li><a href="#">Wearables</a></li>
+        <li><a href="#">Smart Home</a></li>
+        <li><a href="#">Gaming</a></li>
+      </ul>
+    </div>
+    <div class="footer-newsletter">
+      <h4>Newsletter</h4>
+      <p>Subscribe to get the latest deals and product launches.</p>
+      <div class="newsletter-form">
+        <input type="email" placeholder="Enter your email"/>
+        <button onclick="subscribeNewsletter()">Subscribe</button>
+      </div>
+      <div class="footer-badges">
+        <span><i class="fas fa-shield-alt"></i> Secure Payments</span>
+        <span><i class="fas fa-truck"></i> Fast Delivery</span>
+        <span><i class="fas fa-undo"></i> Easy Returns</span>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2024 SmartGadget Marketplace. All rights reserved.</p>
+    <div class="payment-icons">
+      <i class="fab fa-cc-visa"></i>
+      <i class="fab fa-cc-mastercard"></i>
+      <i class="fab fa-cc-paypal"></i>
+      <i class="fab fa-cc-apple-pay"></i>
+    </div>
+  </div>
+</footer>

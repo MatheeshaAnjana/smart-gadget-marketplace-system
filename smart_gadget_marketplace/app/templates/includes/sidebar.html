@@ -1,0 +1,41 @@
+<aside class="admin-sidebar" id="adminSidebar">
+  <div class="sidebar-header">
+    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+    <span>Smart<strong>Gadget</strong></span>
+    <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+  </div>
+  <nav class="sidebar-nav">
+    <p class="nav-section-label">Main</p>
+    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+      <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+    </a>
+    <p class="nav-section-label">Catalog</p>
+    <a href="{{ url_for('admin.products') }}" class="sidebar-link {% if request.endpoint == 'admin.products' %}active{% endif %}">
+      <i class="fas fa-box-open"></i><span>Products</span>
+    </a>
+    <a href="{{ url_for('admin.add_product') }}" class="sidebar-link {% if request.endpoint == 'admin.add_product' %}active{% endif %}">
+      <i class="fas fa-plus-circle"></i><span>Add Product</span>
+    </a>
+    <p class="nav-section-label">Management</p>
+    <a href="{{ url_for('admin.users') }}" class="sidebar-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+      <i class="fas fa-users"></i><span>Users</span>
+    </a>
+    <a href="{{ url_for('admin.orders') }}" class="sidebar-link {% if request.endpoint == 'admin.orders' %}active{% endif %}">
+      <i class="fas fa-shopping-bag"></i><span>Orders</span>
+    </a>
+    <a href="{{ url_for('admin.ratings') }}" class="sidebar-link {% if request.endpoint == 'admin.ratings' %}active{% endif %}">
+      <i class="fas fa-star"></i><span>Ratings</span>
+    </a>
+    <p class="nav-section-label">Insights</p>
+    <a href="{{ url_for('admin.analytics') }}" class="sidebar-link {% if request.endpoint == 'admin.analytics' %}active{% endif %}">
+      <i class="fas fa-chart-line"></i><span>Analytics</span>
+    </a>
+    <div class="sidebar-divider"></div>
+    <a href="{{ url_for('user.home') }}" class="sidebar-link">
+      <i class="fas fa-store"></i><span>View Store</span>
+    </a>
+    <a href="{{ url_for('auth.logout') }}" class="sidebar-link logout">
+      <i class="fas fa-sign-out-alt"></i><span>Logout</span>
+    </a>
+  </nav>
+</aside>

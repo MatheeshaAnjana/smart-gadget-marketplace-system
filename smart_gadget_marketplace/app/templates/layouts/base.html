@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Smart Gadget Marketplace{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/marketplace.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  {% include 'includes/navbar.html' %}
+  {% include 'includes/alerts.html' %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'includes/footer.html' %}
+
+  <!-- Back to Top -->
+  <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

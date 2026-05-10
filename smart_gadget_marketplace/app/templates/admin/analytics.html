@@ -1,0 +1,85 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Analytics — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><h2>Analytics</h2><p>In-depth business insights</p></div>
+
+<div class="stats-cards">
+  <div class="stat-card blue"><div class="stat-icon-wrap"><i class="fas fa-dollar-sign"></i></div><div><p>Total Revenue</p><h3>$284K</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 15%</span></div></div>
+  <div class="stat-card green"><div class="stat-icon-wrap"><i class="fas fa-eye"></i></div><div><p>Page Views</p><h3>128K</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 32%</span></div></div>
+  <div class="stat-card purple"><div class="stat-icon-wrap"><i class="fas fa-search"></i></div><div><p>Searches</p><h3>45K</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 18%</span></div></div>
+  <div class="stat-card orange"><div class="stat-icon-wrap"><i class="fas fa-redo"></i></div><div><p>Return Rate</p><h3>2.3%</h3><span class="trend down"><i class="fas fa-arrow-down"></i> 0.5%</span></div></div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card wide">
+    <div class="chart-header"><h4>Revenue Over Time</h4></div>
+    <canvas id="revenueChart" height="100"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h4>User Growth</h4></div>
+    <canvas id="userChart" height="180"></canvas>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-header"><h4>Most Viewed Products</h4></div>
+    <canvas id="viewsChart" height="200"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h4>Most Searched Terms</h4></div>
+    <div class="search-terms-list">
+      <div class="search-term"><span>Sony Headphones</span><div class="term-bar"><div style="width:85%"></div></div><span>8.5K</span></div>
+      <div class="search-term"><span>iPad Pro</span><div class="term-bar"><div style="width:72%"></div></div><span>7.2K</span></div>
+      <div class="search-term"><span>Gaming Laptop</span><div class="term-bar"><div style="width:65%"></div></div><span>6.5K</span></div>
+      <div class="search-term"><span>AirPods Pro</span><div class="term-bar"><div style="width:60%"></div></div><span>6.0K</span></div>
+      <div class="search-term"><span>Drone</span><div class="term-bar"><div style="width:48%"></div></div><span>4.8K</span></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [{
+      label: 'Revenue ($)',
+      data: [28000,35000,42000,38000,51000,47000,55000,62000,58000,71000,68000,79000],
+      backgroundColor: 'rgba(14,165,233,0.8)',
+      borderRadius: 6,
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+});
+new Chart(document.getElementById('userChart'), {
+  type: 'line',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun'],
+    datasets: [{
+      label: 'New Users',
+      data: [120,185,240,190,310,280],
+      borderColor: '#22c55e',
+      backgroundColor: 'rgba(34,197,94,0.1)',
+      fill: true,
+      tension: 0.4
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } } }
+});
+new Chart(document.getElementById('viewsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['AirPods Pro','Sony XM5','iPad Pro','ROG Laptop','DJI Mini'],
+    datasets: [{
+      label: 'Views',
+      data: [15230,8920,12450,11230,9320],
+      backgroundColor: ['#0ea5e9','#22c55e','#a855f7','#f59e0b','#ef4444'],
+      borderRadius: 6
+    }]
+  },
+  options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+});
+</script>
+{% endblock %}

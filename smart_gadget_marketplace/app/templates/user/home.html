@@ -1,0 +1,178 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Home — SmartGadget Marketplace{% endblock %}
+{% block content %}
+
+<!-- Hero Slider -->
+<section class="hero-section">
+  <div class="hero-slider" id="heroSlider">
+    <div class="slide active" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)">
+      <div class="slide-content">
+        <span class="slide-tag">NEW ARRIVAL</span>
+        <h1>Sony WH-1000XM5</h1>
+        <p>Industry-leading noise cancellation. 30-hour battery.</p>
+        <div class="slide-price"><span>From</span><strong>$349.99</strong></div>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="slide-image"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" alt="Sony Headphones"/></div>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)">
+      <div class="slide-content light">
+        <span class="slide-tag">BEST SELLER</span>
+        <h1>iPad Pro M2</h1>
+        <p>The ultimate iPad experience. Liquid Retina XDR.</p>
+        <div class="slide-price"><span>From</span><strong>$1,099.00</strong></div>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="slide-image"><img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500" alt="iPad Pro"/></div>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%)">
+      <div class="slide-content light">
+        <span class="slide-tag">HOT DEAL</span>
+        <h1>DJI Mini 4 Pro</h1>
+        <p>4K/60fps video. Omnidirectional obstacle sensing.</p>
+        <div class="slide-price"><span>From</span><strong>$759.00</strong></div>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="slide-image"><img src="https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500" alt="DJI Drone"/></div>
+    </div>
+    <div class="slide" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%)">
+      <div class="slide-content light">
+        <span class="slide-tag">GAMING</span>
+        <h1>ASUS ROG Laptop</h1>
+        <p>RTX 4070, 165Hz display, Ryzen 9 power.</p>
+        <div class="slide-price"><span>From</span><strong>$1,499.00</strong></div>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div class="slide-image"><img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500" alt="Gaming Laptop"/></div>
+    </div>
+  </div>
+  <div class="slider-controls">
+    <button class="slider-prev" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+    <div class="slider-dots" id="sliderDots"></div>
+    <button class="slider-next" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+  </div>
+</section>
+
+<!-- Category Pills -->
+<section class="categories-section">
+  <div class="container">
+    <div class="category-pills">
+      <button class="pill active" onclick="filterHomeProducts('All')">All</button>
+      <button class="pill" onclick="filterHomeProducts('Audio')"><i class="fas fa-headphones"></i> Audio</button>
+      <button class="pill" onclick="filterHomeProducts('Laptops')"><i class="fas fa-laptop"></i> Laptops</button>
+      <button class="pill" onclick="filterHomeProducts('Wearables')"><i class="fas fa-watch"></i> Wearables</button>
+      <button class="pill" onclick="filterHomeProducts('Gaming')"><i class="fas fa-gamepad"></i> Gaming</button>
+      <button class="pill" onclick="filterHomeProducts('Drones')"><i class="fas fa-helicopter"></i> Drones</button>
+      <button class="pill" onclick="filterHomeProducts('Cameras')"><i class="fas fa-camera"></i> Cameras</button>
+      <button class="pill" onclick="filterHomeProducts('Smart Home')"><i class="fas fa-home"></i> Smart Home</button>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Products -->
+<section class="featured-section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2>Featured Products</h2>
+        <p>Handpicked top gadgets for you</p>
+      </div>
+      <a href="{{ url_for('user.products') }}" class="see-all-btn">See All Products <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="products-grid" id="featuredGrid">
+      {% for product in products %}
+      <div class="product-card" data-category="{{ product.category }}">
+        {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+        <div class="product-image-wrap">
+          <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/>
+          <div class="product-overlay">
+            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn"><i class="fas fa-eye"></i> Quick View</a>
+          </div>
+        </div>
+        <div class="product-info">
+          <span class="product-cat">{{ product.category }}</span>
+          <h3 class="product-name">{{ product.name }}</h3>
+          <div class="product-rating">
+            <div class="stars">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div>
+            <span>({{ product.reviews }})</span>
+          </div>
+          <div class="product-footer">
+            <div class="product-price">
+              <span class="price">${{ "%.2f"|format(product.price) }}</span>
+              {% if product.original_price %}<span class="original">${{ "%.2f"|format(product.original_price) }}</span>{% endif %}
+            </div>
+            <button class="add-cart-btn" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
+              <i class="fas fa-cart-plus"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="center-btn">
+      <a href="{{ url_for('user.products') }}" class="btn-primary"><i class="fas fa-th-large"></i> Browse All Products</a>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Banner -->
+<section class="stats-banner">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="stat-icon"><i class="fas fa-box-open"></i></div><div><h3>10,000+</h3><p>Products Available</p></div></div>
+      <div class="stat-item"><div class="stat-icon"><i class="fas fa-users"></i></div><div><h3>50,000+</h3><p>Happy Customers</p></div></div>
+      <div class="stat-item"><div class="stat-icon"><i class="fas fa-shipping-fast"></i></div><div><h3>Free Shipping</h3><p>On orders over $50</p></div></div>
+      <div class="stat-item"><div class="stat-icon"><i class="fas fa-shield-alt"></i></div><div><h3>Secure</h3><p>100% Safe Payments</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Reviews -->
+<section class="reviews-section">
+  <div class="container">
+    <div class="section-header center">
+      <h2>What Our Customers Say</h2>
+      <p>Join thousands of satisfied customers</p>
+    </div>
+    <div class="reviews-grid">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-header">
+          <img src="{{ review.avatar }}" alt="{{ review.user }}"/>
+          <div>
+            <h4>{{ review.user }}</h4>
+            <span>{{ review.product }}</span>
+          </div>
+          <div class="review-stars">
+            {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+          </div>
+        </div>
+        <p>"{{ review.comment }}"</p>
+        <span class="review-date">{{ review.date }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Newsletter -->
+<section class="newsletter-section">
+  <div class="container">
+    <div class="newsletter-card">
+      <div class="newsletter-content">
+        <h2>Get Exclusive Deals in Your Inbox</h2>
+        <p>Subscribe to get notified about new arrivals, flash sales, and exclusive offers.</p>
+        <div class="newsletter-form">
+          <input type="email" id="newsletterEmail" placeholder="Enter your email address"/>
+          <button onclick="subscribeNewsletter()"><i class="fas fa-paper-plane"></i> Subscribe</button>
+        </div>
+        <p class="newsletter-note"><i class="fas fa-lock"></i> We respect your privacy. No spam, ever.</p>
+      </div>
+      <div class="newsletter-image">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/products.js') }}"></script>{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Dashboard — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><h2>Dashboard</h2><p>Welcome back, Admin! Here's what's happening.</p></div>
+
+<!-- Stats Cards -->
+<div class="stats-cards">
+  <div class="stat-card blue"><div class="stat-icon-wrap"><i class="fas fa-box-open"></i></div><div><p>Total Products</p><h3>{{ stats.total_products }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 12% this month</span></div></div>
+  <div class="stat-card green"><div class="stat-icon-wrap"><i class="fas fa-users"></i></div><div><p>Total Users</p><h3>{{ stats.total_users }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 8% this month</span></div></div>
+  <div class="stat-card purple"><div class="stat-icon-wrap"><i class="fas fa-shopping-bag"></i></div><div><p>Total Orders</p><h3>{{ stats.total_orders }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 23% this month</span></div></div>
+  <div class="stat-card orange"><div class="stat-icon-wrap"><i class="fas fa-dollar-sign"></i></div><div><p>Revenue</p><h3>${{ "%.0f"|format(stats.revenue/1000) }}K</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 15% this month</span></div></div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-row">
+  <div class="chart-card wide">
+    <div class="chart-header"><h4>Monthly Sales</h4><select><option>2024</option><option>2023</option></select></div>
+    <canvas id="salesChart" height="100"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h4>Category Sales</h4></div>
+    <canvas id="categoryChart" height="180"></canvas>
+  </div>
+</div>
+
+<!-- Tables Row -->
+<div class="tables-row">
+  <div class="table-card">
+    <div class="table-header"><h4>Recent Orders</h4><a href="{{ url_for('admin.orders') }}">View All</a></div>
+    <table class="admin-table">
+      <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>{{ order.id }}</td>
+          <td>{{ order.user }}</td>
+          <td>${{ "%.2f"|format(order.total) }}</td>
+          <td><span class="delivery-badge {{ order.delivery|lower|replace(' ', '-') }}">{{ order.delivery }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-card">
+    <div class="table-header"><h4>Top Products</h4><a href="{{ url_for('admin.products') }}">View All</a></div>
+    <div class="top-products-list">
+      {% for product in products %}
+      <div class="top-product-item">
+        <img src="{{ product.image }}" alt="{{ product.name }}"/>
+        <div><strong>{{ product.name }}</strong><span>${{ "%.2f"|format(product.price) }}</span></div>
+        <div class="stars small">{% for i in range(product.rating|int) %}<i class="fas fa-star"></i>{% endfor %}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const salesData = {{ stats.monthly_sales|tojson }};
+const catData = {{ stats.category_sales|tojson }};
+
+new Chart(document.getElementById('salesChart'), {
+  type: 'line',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    datasets: [{
+      label: 'Sales ($)',
+      data: salesData,
+      borderColor: '#0ea5e9',
+      backgroundColor: 'rgba(14,165,233,0.1)',
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: '#0ea5e9',
+      pointRadius: 4,
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } } }
+});
+
+new Chart(document.getElementById('categoryChart'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(catData),
+    datasets: [{ data: Object.values(catData), backgroundColor: ['#0ea5e9','#22c55e','#f59e0b','#a855f7','#ef4444','#06b6d4','#f97316','#84cc16'] }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+});
+</script>
+{% endblock %}

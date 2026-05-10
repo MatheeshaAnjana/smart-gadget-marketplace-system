@@ -1,0 +1,31 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Users — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><h2>Users</h2><p>Manage registered users</p></div>
+<div class="admin-card">
+  <div class="table-toolbar">
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search users..." oninput="filterTable(this.value, 'usersTable')"/></div>
+    <select><option>All Status</option><option>Active</option><option>Inactive</option></select>
+  </div>
+  <table class="admin-table" id="usersTable">
+    <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Orders</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td><div class="user-cell"><img src="{{ user.avatar }}" alt="{{ user.name }}" class="user-avatar-sm"/><strong>{{ user.name }}</strong></div></td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.phone }}</td>
+        <td><span class="badge-info">{{ user.orders }} orders</span></td>
+        <td>{{ user.joined }}</td>
+        <td><span class="badge-{{ 'success' if user.status == 'Active' else 'warning' }}">{{ user.status }}</span></td>
+        <td class="action-btns">
+          <button class="btn-icon edit" onclick="showToast('User edit coming soon', 'info')"><i class="fas fa-edit"></i></button>
+          <button class="btn-icon delete" onclick="if(confirm('Delete user?')) showToast('User deleted','success')"><i class="fas fa-trash"></i></button>
+          <button class="btn-icon view" onclick="showToast('User activity: {{ user.orders }} orders', 'info')"><i class="fas fa-chart-bar"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

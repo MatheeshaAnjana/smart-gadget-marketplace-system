@@ -1,0 +1,154 @@
+{% extends 'layouts/base.html' %}
+{% block title %}{{ product.name }} — SmartGadget{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="breadcrumb">
+    <a href="{{ url_for('user.home') }}">Home</a> <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('user.products') }}">Products</a> <i class="fas fa-chevron-right"></i>
+    <span>{{ product.name }}</span>
+  </div>
+
+  <div class="product-detail-grid">
+    <!-- Images -->
+    <div class="product-images">
+      <div class="main-image" id="mainImage">
+        <img src="{{ product.image }}" alt="{{ product.name }}" id="mainImg"/>
+        {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+      </div>
+      <div class="image-thumbs">
+        <img src="{{ product.image }}" onclick="changeImage(this)" class="active" alt="thumb1"/>
+        <img src="{{ product.image }}?v=2" onclick="changeImage(this)" alt="thumb2"/>
+        <img src="{{ product.image }}?v=3" onclick="changeImage(this)" alt="thumb3"/>
+        <img src="{{ product.image }}?v=4" onclick="changeImage(this)" alt="thumb4"/>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="product-detail-info">
+      <span class="product-cat">{{ product.category }}</span>
+      <h1>{{ product.name }}</h1>
+      <div class="detail-rating">
+        <div class="stars large">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div>
+        <span>{{ product.rating }}/5</span>
+        <span class="sep">|</span>
+        <span>{{ product.reviews }} Reviews</span>
+        <span class="sep">|</span>
+        <span class="stock {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-stock{% endif %}">
+          {% if product.stock > 10 %}<i class="fas fa-check-circle"></i> In Stock
+          {% elif product.stock > 0 %}<i class="fas fa-exclamation-circle"></i> Only {{ product.stock }} left
+          {% else %}<i class="fas fa-times-circle"></i> Out of Stock{% endif %}
+        </span>
+      </div>
+      <div class="detail-price">
+        <span class="big-price">${{ "%.2f"|format(product.price) }}</span>
+        {% if product.original_price %}<span class="original-price">${{ "%.2f"|format(product.original_price) }}</span>
+        <span class="savings">Save ${{ "%.2f"|format(product.original_price - product.price) }}</span>{% endif %}
+      </div>
+
+      <div class="quantity-row">
+        <label>Quantity</label>
+        <div class="qty-control">
+          <button onclick="changeQty(-1)">−</button>
+          <input type="number" id="qty" value="1" min="1" max="{{ product.stock }}"/>
+          <button onclick="changeQty(1)">+</button>
+        </div>
+        <span class="stock-note">{{ product.stock }} available</span>
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
+          <i class="fas fa-cart-plus"></i> Add to Cart
+        </button>
+        <a href="{{ url_for('user.checkout') }}" class="btn-secondary">
+          <i class="fas fa-bolt"></i> Buy Now
+        </a>
+        <button class="wishlist-btn-lg" onclick="toggleWishlist(this, {{ product.id }})">
+          <i class="far fa-heart"></i>
+        </button>
+      </div>
+
+      <div class="seller-info">
+        <div class="seller-row"><i class="fas fa-store"></i><span>Sold by: <strong>{{ product.brand }} Official Store</strong></span></div>
+        <div class="seller-row"><i class="fas fa-shipping-fast"></i><span>Free delivery on orders over $50</span></div>
+        <div class="seller-row"><i class="fas fa-undo"></i><span>30-day easy returns</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="product-tabs">
+    <div class="tab-headers">
+      <button class="tab-btn active" onclick="showTab('description')">Description</button>
+      <button class="tab-btn" onclick="showTab('specifications')">Specifications</button>
+      <button class="tab-btn" onclick="showTab('reviews')">Reviews ({{ reviews|length }})</button>
+    </div>
+    <div class="tab-content active" id="tab-description">
+      <p>{{ product.description }}</p>
+      <ul class="desc-list">
+        <li>Premium build quality with {{ product.brand }} engineering</li>
+        <li>Optimized performance for everyday and professional use</li>
+        <li>1-year manufacturer warranty included</li>
+        <li>Compatible with major ecosystems and devices</li>
+      </ul>
+    </div>
+    <div class="tab-content" id="tab-specifications">
+      <table class="specs-table">
+        <tr><td>Brand</td><td>{{ product.brand }}</td></tr>
+        <tr><td>Category</td><td>{{ product.category }}</td></tr>
+        <tr><td>Model</td><td>{{ product.name }}</td></tr>
+        <tr><td>Stock</td><td>{{ product.stock }} units</td></tr>
+        <tr><td>Rating</td><td>{{ product.rating }}/5.0</td></tr>
+        <tr><td>Warranty</td><td>12 Months</td></tr>
+        <tr><td>Shipping</td><td>Free on orders $50+</td></tr>
+        <tr><td>Returns</td><td>30 Days</td></tr>
+      </table>
+    </div>
+    <div class="tab-content" id="tab-reviews">
+      <div class="reviews-summary">
+        <div class="avg-rating"><span class="big-number">{{ product.rating }}</span><div class="stars large">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div><p>Based on {{ product.reviews }} reviews</p></div>
+      </div>
+      {% for review in reviews[:3] %}
+      <div class="review-item">
+        <div class="review-top"><img src="{{ review.avatar }}" alt="{{ review.user }}"/><div><strong>{{ review.user }}</strong><span>{{ review.date }}</span></div><div class="stars small">{% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}</div></div>
+        <p>{{ review.comment }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related %}
+  <div class="related-products">
+    <h3>Related Products</h3>
+    <div class="products-grid">
+      {% for p in related %}
+      <div class="product-card">
+        <div class="product-image-wrap"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy"/></div>
+        <div class="product-info">
+          <h3 class="product-name"><a href="{{ url_for('user.product_details', product_id=p.id) }}">{{ p.name }}</a></h3>
+          <div class="product-footer"><span class="price">${{ "%.2f"|format(p.price) }}</span><button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name }}', {{ p.price }}, '{{ p.image }}')"><i class="fas fa-cart-plus"></i></button></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}<script>
+function changeImage(el) {
+  document.querySelectorAll('.image-thumbs img').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('mainImg').src = el.src;
+}
+function changeQty(delta) {
+  const input = document.getElementById('qty');
+  input.value = Math.max(1, parseInt(input.value) + delta);
+}
+function showTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+</script>{% endblock %}

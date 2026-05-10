@@ -1,0 +1,29 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Wishlist — SmartGadget{% endblock %}
+{% block content %}
+<div class="page-header"><div class="container"><h1>My Wishlist</h1><p>Items you love, saved for later</p></div></div>
+<div class="container">
+  {% if products %}
+  <div class="products-grid large">
+    {% for product in products %}
+    <div class="product-card">
+      {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+      <button class="wishlist-btn active" onclick="toggleWishlist(this, {{ product.id }})"><i class="fas fa-heart"></i></button>
+      <div class="product-image-wrap"><img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/></div>
+      <div class="product-info">
+        <span class="product-cat">{{ product.category }}</span>
+        <h3 class="product-name"><a href="{{ url_for('user.product_details', product_id=product.id) }}">{{ product.name }}</a></h3>
+        <div class="product-rating"><div class="stars">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div><span>({{ product.reviews }})</span></div>
+        <div class="product-footer">
+          <span class="price">${{ "%.2f"|format(product.price) }}</span>
+          <button class="add-cart-btn" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')"><i class="fas fa-cart-plus"></i></button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><i class="fas fa-heart"></i><h3>Your wishlist is empty</h3><p>Browse products and add items to your wishlist.</p><a href="{{ url_for('user.products') }}" class="btn-primary">Browse Products</a></div>
+  {% endif %}
+</div>
+{% endblock %}

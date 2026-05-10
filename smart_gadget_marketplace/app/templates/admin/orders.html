@@ -1,0 +1,46 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Orders — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><h2>Orders</h2><p>Manage and track all orders</p></div>
+<div class="admin-card">
+  <div class="table-toolbar">
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search orders..."/></div>
+    <select><option>All Status</option><option>Preparing</option><option>Shipped</option><option>Delivered</option></select>
+  </div>
+  <table class="admin-table" id="ordersTable">
+    <thead><tr><th>Order ID</th><th>Customer</th><th>Products</th><th>Total</th><th>Payment</th><th>Delivery</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><strong>{{ order.id }}</strong></td>
+        <td>{{ order.user }}</td>
+        <td><small>{{ order.products|join(', ') }}</small></td>
+        <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
+        <td><span class="badge-{{ 'success' if order.payment == 'Paid' else 'warning' }}">{{ order.payment }}</span></td>
+        <td>
+          <select class="status-select" onchange="updateOrderStatus(this, '{{ order.id }}')">
+            <option {% if order.delivery == 'Preparing' %}selected{% endif %}>Preparing</option>
+            <option {% if order.delivery == 'Packed' %}selected{% endif %}>Packed</option>
+            <option {% if order.delivery == 'Shipped' %}selected{% endif %}>Shipped</option>
+            <option {% if order.delivery == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+            <option {% if order.delivery == 'Delivered' %}selected{% endif %}>Delivered</option>
+          </select>
+        </td>
+        <td>{{ order.date }}</td>
+        <td class="action-btns">
+          <button class="btn-icon edit" onclick="showToast('Order marked as delivered!','success')"><i class="fas fa-check"></i></button>
+          <button class="btn-icon delete" onclick="if(confirm('Cancel order?')) showToast('Order cancelled','success')"><i class="fas fa-times"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function updateOrderStatus(select, orderId) {
+  showToast('Order ' + orderId + ' updated to: ' + select.value, 'success');
+}
+</script>
+{% endblock %}

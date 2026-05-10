@@ -1,0 +1,79 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Add Product — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header">
+  <div><h2>Add New Product</h2><p>Add a new gadget to the marketplace</p></div>
+  <a href="{{ url_for('admin.products') }}" class="btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="admin-card">
+  <div class="product-form-layout">
+    <div class="form-main">
+      <div class="form-section">
+        <h4>Basic Information</h4>
+        <div class="form-group"><label>Product Name *</label><input type="text" placeholder="e.g. Sony WH-1000XM5"/></div>
+        <div class="form-row">
+          <div class="form-group"><label>Brand *</label><input type="text" placeholder="e.g. Sony"/></div>
+          <div class="form-group"><label>Category *</label><select><option>Audio</option><option>Tablets</option><option>Laptops</option><option>Wearables</option><option>Gaming</option><option>Cameras</option><option>Accessories</option><option>Smart Home</option><option>Drones</option></select></div>
+        </div>
+        <div class="form-group"><label>Description *</label><textarea rows="4" placeholder="Describe the product features and benefits..."></textarea></div>
+      </div>
+      <div class="form-section">
+        <h4>Pricing & Stock</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Price ($) *</label><input type="number" placeholder="0.00" step="0.01"/></div>
+          <div class="form-group"><label>Original Price ($)</label><input type="number" placeholder="0.00" step="0.01"/></div>
+          <div class="form-group"><label>Stock Quantity *</label><input type="number" placeholder="0"/></div>
+        </div>
+      </div>
+      <div class="form-section">
+        <h4>Product Badge</h4>
+        <div class="badge-options">
+          <label class="badge-opt"><input type="radio" name="badge" value=""/><span>None</span></label>
+          <label class="badge-opt"><input type="radio" name="badge" value="New"/><span class="badge-preview new">New</span></label>
+          <label class="badge-opt"><input type="radio" name="badge" value="Best Seller"/><span class="badge-preview bestseller">Best Seller</span></label>
+          <label class="badge-opt"><input type="radio" name="badge" value="Hot"/><span class="badge-preview hot">Hot</span></label>
+          <label class="badge-opt"><input type="radio" name="badge" value="Sale"/><span class="badge-preview sale">Sale</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="form-side">
+      <div class="form-section">
+        <h4>Product Image</h4>
+        <div class="image-upload-zone" id="uploadZone" onclick="document.getElementById('imgInput').click()">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Click to upload image</p>
+          <span>PNG, JPG up to 5MB</span>
+          <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="previewImage(this)"/>
+        </div>
+        <div id="imagePreview" style="display:none"><img id="previewImg" style="width:100%;border-radius:8px;margin-top:10px"/></div>
+        <div class="form-group" style="margin-top:1rem"><label>Or paste image URL</label><input type="url" id="imgUrl" placeholder="https://..." oninput="previewUrl(this)"/></div>
+      </div>
+      <div class="form-section">
+        <h4>Publish</h4>
+        <button class="btn-primary full" onclick="showToast('Product added successfully!', 'success')"><i class="fas fa-plus-circle"></i> Add Product</button>
+        <button class="btn-outline full" style="margin-top:0.5rem"><i class="fas fa-save"></i> Save as Draft</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('imagePreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+function previewUrl(input) {
+  if (input.value) {
+    document.getElementById('previewImg').src = input.value;
+    document.getElementById('imagePreview').style.display = 'block';
+  }
+}
+</script>
+{% endblock %}

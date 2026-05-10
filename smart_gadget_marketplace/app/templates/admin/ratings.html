@@ -1,0 +1,28 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Ratings — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header"><h2>Ratings & Reviews</h2><p>Monitor product reviews</p></div>
+<div class="admin-card">
+  <div class="table-toolbar">
+    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search reviews..."/></div>
+    <select><option>All Ratings</option><option>5 Stars</option><option>4 Stars</option><option>3 Stars</option></select>
+  </div>
+  <table class="admin-table">
+    <thead><tr><th>User</th><th>Product</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for review in reviews %}
+      <tr>
+        <td><div class="user-cell"><img src="{{ review.avatar }}" class="user-avatar-sm" alt="{{ review.user }}"/><strong>{{ review.user }}</strong></div></td>
+        <td>{{ review.product }}</td>
+        <td><div class="stars small">{% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %} ({{ review.rating }}/5)</div></td>
+        <td><small>{{ review.comment[:80] }}...</small></td>
+        <td>{{ review.date }}</td>
+        <td class="action-btns">
+          <button class="btn-icon delete" onclick="if(confirm('Delete?')) showToast('Review deleted','success')"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

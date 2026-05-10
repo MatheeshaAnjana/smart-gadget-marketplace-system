@@ -1,0 +1,43 @@
+{% extends 'layouts/admin_base.html' %}
+{% block title %}Edit Product — Admin{% endblock %}
+{% block content %}
+<div class="admin-page-header">
+  <div><h2>Edit Product</h2><p>Update product information</p></div>
+  <a href="{{ url_for('admin.products') }}" class="btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+<div class="admin-card">
+  <div class="product-form-layout">
+    <div class="form-main">
+      <div class="form-section">
+        <h4>Basic Information</h4>
+        <div class="form-group"><label>Product Name *</label><input type="text" value="{{ product.name }}"/></div>
+        <div class="form-row">
+          <div class="form-group"><label>Brand *</label><input type="text" value="{{ product.brand }}"/></div>
+          <div class="form-group"><label>Category *</label><select><option {% if product.category == 'Audio' %}selected{% endif %}>Audio</option><option {% if product.category == 'Tablets' %}selected{% endif %}>Tablets</option><option {% if product.category == 'Laptops' %}selected{% endif %}>Laptops</option><option {% if product.category == 'Wearables' %}selected{% endif %}>Wearables</option><option {% if product.category == 'Gaming' %}selected{% endif %}>Gaming</option><option {% if product.category == 'Cameras' %}selected{% endif %}>Cameras</option><option {% if product.category == 'Accessories' %}selected{% endif %}>Accessories</option></select></div>
+        </div>
+        <div class="form-group"><label>Description *</label><textarea rows="4">{{ product.description }}</textarea></div>
+      </div>
+      <div class="form-section">
+        <h4>Pricing & Stock</h4>
+        <div class="form-row">
+          <div class="form-group"><label>Price ($) *</label><input type="number" value="{{ product.price }}" step="0.01"/></div>
+          <div class="form-group"><label>Original Price ($)</label><input type="number" value="{{ product.original_price }}" step="0.01"/></div>
+          <div class="form-group"><label>Stock</label><input type="number" value="{{ product.stock }}"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-side">
+      <div class="form-section">
+        <h4>Current Image</h4>
+        <img src="{{ product.image }}" alt="{{ product.name }}" style="width:100%;border-radius:8px;"/>
+        <div class="form-group" style="margin-top:1rem"><label>Image URL</label><input type="url" value="{{ product.image }}"/></div>
+      </div>
+      <div class="form-section">
+        <h4>Actions</h4>
+        <button class="btn-primary full" onclick="showToast('Product updated!', 'success')"><i class="fas fa-save"></i> Save Changes</button>
+        <button class="btn-danger full" style="margin-top:0.5rem" onclick="if(confirm('Delete?')) showToast('Product deleted','success')"><i class="fas fa-trash"></i> Delete Product</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
