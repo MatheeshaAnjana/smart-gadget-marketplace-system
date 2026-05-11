@@ -1,73 +1,131 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Ratings & Reviews — SmartGadget{% endblock %}
 {% block content %}
-<div class="page-header"><div class="container"><h1>Ratings & Reviews</h1></div></div>
+<div class="page-header">
+  <div class="container">
+    <h1>Ratings &amp; Reviews</h1>
+    <p>Share your experience with products you've used</p>
+  </div>
+</div>
+
 <div class="container">
-  <!-- Add Review -->
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+           border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+           color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+           padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+        <i class="fas fa-{% if category=='success' %}check{% else %}exclamation{% endif %}-circle"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Add / Submit Review — POST to Flask → Oracle -->
   <div class="add-review-card">
     <h3>Share Your Experience</h3>
-    <div class="review-form">
+    <form method="POST" action="{{ url_for('user.ratings') }}" class="review-form">
+
       <div class="form-row">
-        <div class="form-group"><label>Product</label><select id="reviewProduct">{% for p in products %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
-        <div class="form-group"><label>Rating</label><div class="star-input" id="starInput"><i class="fas fa-star" onclick="setRating(1)"></i><i class="fas fa-star" onclick="setRating(2)"></i><i class="fas fa-star" onclick="setRating(3)"></i><i class="fas fa-star" onclick="setRating(4)"></i><i class="fas fa-star" onclick="setRating(5)"></i></div></div>
+        <div class="form-group">
+          <label for="reviewProduct">Product</label>
+          <select name="product_id" id="reviewProduct" title="Select product" required>
+            <option value="" disabled selected>-- Select a product --</option>
+            {% for p in products %}
+              <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Rating</label>
+          <div class="star-input" id="starInput">
+            {% for i in range(1, 6) %}
+              <i class="fas fa-star" data-val="{{ i }}" onclick="setRating({{ i }})"
+                 style="font-size:1.6rem;cursor:pointer;color:#d1d5db;margin-right:4px;"></i>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="rating" id="ratingInput" value="5"/>
+        </div>
       </div>
-      <div class="form-group"><label>Review</label><textarea id="reviewText" rows="3" placeholder="Share your experience with this product..."></textarea></div>
-      <button class="btn-primary" onclick="submitReview()"><i class="fas fa-paper-plane"></i> Submit Review</button>
-    </div>
+
+      <div class="form-group">
+        <label for="reviewComment">Review</label>
+        <textarea name="comment" id="reviewComment" rows="3"
+                  placeholder="Share your experience with this product..."
+                  style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;
+                         font-size:0.9rem;resize:vertical;" required></textarea>
+      </div>
+
+      <button type="submit" class="btn-primary">
+        <i class="fas fa-paper-plane"></i> Submit Review
+      </button>
+    </form>
   </div>
 
-  <!-- Reviews List -->
-  <div class="reviews-list-section">
-    <h3>Customer Reviews</h3>
+  <!-- My Reviews — from Oracle DB -->
+  <div class="reviews-list-section" style="margin-top:32px;">
+    <h3>My Reviews
+      <span style="font-size:0.85rem;color:#64748b;font-weight:400;margin-left:8px;">
+        ({{ reviews|length }} review{{ 's' if reviews|length != 1 else '' }})
+      </span>
+    </h3>
+
+    {% if reviews %}
     <div class="reviews-list" id="reviewsList">
       {% for review in reviews %}
       <div class="review-item-full" id="review-{{ review.id }}">
         <div class="review-top">
-          <img src="{{ review.avatar }}" alt="{{ review.user }}"/>
           <div class="review-meta">
-            <strong>{{ review.user }}</strong>
-            <span class="review-product">{{ review.product }}</span>
-            <span class="review-date">{{ review.date }}</span>
+            <strong>{{ review.product }}</strong>
+            <span class="review-date" style="color:#94a3b8;font-size:0.82rem;margin-left:8px;">
+              {{ review.date }}
+            </span>
           </div>
-          <div class="stars">{% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}</div>
-          <div class="review-actions">
-            <button onclick="editReview({{ review.id }})" class="btn-sm outline"><i class="fas fa-edit"></i></button>
-            <button onclick="deleteReview({{ review.id }})" class="btn-sm danger"><i class="fas fa-trash"></i></button>
+          <div class="stars" style="margin-left:auto;">
+            {% for i in range(review.rating|int) %}
+              <i class="fas fa-star" style="color:#f59e0b;"></i>
+            {% endfor %}
+            {% for i in range(5 - review.rating|int) %}
+              <i class="fas fa-star" style="color:#d1d5db;"></i>
+            {% endfor %}
           </div>
         </div>
-        <p>"{{ review.comment }}"</p>
+        <p style="margin-top:8px;color:#374151;">"{{ review.comment }}"</p>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <!-- Edit redirects to same form with product pre-selected -->
+          <a href="{{ url_for('user.ratings') }}" class="btn-sm outline"
+             title="Edit Review">
+            <i class="fas fa-edit"></i> Edit
+          </a>
+        </div>
       </div>
       {% endfor %}
     </div>
+
+    {% else %}
+    <div class="empty-state" style="text-align:center;padding:40px 0;">
+      <i class="fas fa-star" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:12px;"></i>
+      <p style="color:#64748b;">You haven't reviewed any products yet.</p>
+      <a href="{{ url_for('user.products') }}" class="btn-primary" style="margin-top:12px;">
+        Browse Products to Review
+      </a>
+    </div>
+    {% endif %}
   </div>
+
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-let currentRating = 0;
-function setRating(n) {
-  currentRating = n;
+function setRating(val) {
+  document.getElementById('ratingInput').value = val;
   document.querySelectorAll('#starInput .fa-star').forEach((s, i) => {
-    s.style.color = i < n ? '#f59e0b' : '#d1d5db';
+    s.style.color = i < val ? '#f59e0b' : '#d1d5db';
   });
 }
-function submitReview() {
-  if (!currentRating) return showToast('Please select a rating', 'error');
-  const text = document.getElementById('reviewText').value.trim();
-  if (!text) return showToast('Please write a review', 'error');
-  showToast('Review submitted successfully!', 'success');
-  document.getElementById('reviewText').value = '';
-  currentRating = 0;
-  document.querySelectorAll('#starInput .fa-star').forEach(s => s.style.color = '');
-}
-function deleteReview(id) {
-  if (confirm('Delete this review?')) {
-    document.getElementById('review-' + id).remove();
-    showToast('Review deleted', 'success');
-  }
-}
-function editReview(id) {
-  showToast('Edit mode activated', 'info');
-}
+// Default highlight 5 stars
+setRating(5);
 </script>
 {% endblock %}

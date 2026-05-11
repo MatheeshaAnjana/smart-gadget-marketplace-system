@@ -1,47 +1,100 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Cart — SmartGadget{% endblock %}
 {% block content %}
-<div class="page-header"><div class="container"><h1>Shopping Cart</h1><p>Review and manage your selected items</p></div></div>
+<div class="page-header">
+  <div class="container">
+    <h1>Shopping Cart</h1>
+    <p>Review and manage your selected items</p>
+  </div>
+</div>
+
 <div class="container">
   <div class="cart-layout" id="cartLayout">
-    <!-- Cart Items -->
+
+    <!-- Cart Items (populated by JS from localStorage) -->
     <div class="cart-items-section">
       <div class="cart-header-row">
         <h3>Cart Items (<span id="cartItemCount">0</span>)</h3>
-        <button class="clear-cart-btn" onclick="clearCart()"><i class="fas fa-trash"></i> Clear Cart</button>
+        <button class="clear-cart-btn" onclick="clearCart()" title="Clear Cart">
+          <i class="fas fa-trash"></i> Clear Cart
+        </button>
       </div>
+
       <div id="cartItemsList">
-        <!-- Populated by JS -->
+        <!-- Populated by cart.js -->
       </div>
-      <div class="empty-cart" id="emptyCart" style="display:none">
+
+      <!-- Empty cart state -->
+      <div class="empty-cart" id="emptyCart" style="display:none;">
         <i class="fas fa-shopping-cart"></i>
         <h3>Your cart is empty</h3>
         <p>Add some amazing gadgets to your cart!</p>
-        <a href="{{ url_for('user.products') }}" class="btn-primary">Browse Products</a>
+        <a href="{{ url_for('user.products') }}" class="btn-primary">
+          <i class="fas fa-th-large"></i> Browse Products
+        </a>
       </div>
     </div>
 
     <!-- Cart Summary -->
     <div class="cart-summary">
       <h3>Order Summary</h3>
-      <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
-      <div class="summary-row"><span>Shipping</span><span id="shipping">Free</span></div>
-      <div class="summary-row"><span>Discount</span><span id="discount" class="discount-amount">-$0.00</span></div>
+
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span id="subtotal">$0.00</span>
+      </div>
+      <div class="summary-row">
+        <span>Shipping</span>
+        <span id="shipping" class="free">Free</span>
+      </div>
+      <div class="summary-row">
+        <span>Discount</span>
+        <span id="discount" class="discount-amount">-$0.00</span>
+      </div>
+
+      <!-- Coupon -->
       <div class="coupon-row">
-        <input type="text" id="couponInput" placeholder="Enter coupon code"/>
-        <button onclick="applyCoupon()">Apply</button>
+        <input type="text" id="couponInput" placeholder="Enter coupon code" title="Coupon code"/>
+        <button onclick="applyCoupon()" type="button">Apply</button>
       </div>
       <div class="coupon-hint">Try: <code>SAVE10</code> or <code>GADGET20</code></div>
+
       <div class="summary-divider"></div>
-      <div class="summary-total"><span>Total</span><span id="totalPrice">$0.00</span></div>
-      <a href="{{ url_for('user.checkout') }}" class="btn-checkout">Proceed to Checkout <i class="fas fa-arrow-right"></i></a>
-      <a href="{{ url_for('user.products') }}" class="continue-shopping"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+      <div class="summary-total">
+        <span>Total</span>
+        <span id="totalPrice">$0.00</span>
+      </div>
+
+      <!-- Checkout button — goes to checkout page -->
+      <a href="{{ url_for('user.checkout') }}" class="btn-checkout" id="checkoutBtn">
+        Proceed to Checkout <i class="fas fa-arrow-right"></i>
+      </a>
+      <a href="{{ url_for('user.products') }}" class="continue-shopping">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+      </a>
+
+      <!-- Security badges -->
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid #e2e8f0;">
+        <div style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:0.8rem;margin-bottom:6px;">
+          <i class="fas fa-shield-alt" style="color:#10b981;"></i> SSL Secured Checkout
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:0.8rem;margin-bottom:6px;">
+          <i class="fas fa-undo" style="color:#10b981;"></i> 30-Day Easy Returns
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:0.8rem;">
+          <i class="fas fa-shipping-fast" style="color:#10b981;"></i> Free Shipping on orders over $50
+        </div>
+      </div>
     </div>
+
   </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() { renderCart(); });
+document.addEventListener('DOMContentLoaded', function() {
+  renderCart();
+});
 </script>
 {% endblock %}

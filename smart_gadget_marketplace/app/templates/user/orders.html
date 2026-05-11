@@ -1,32 +1,132 @@
 {% extends 'layouts/base.html' %}
 {% block title %}My Orders — SmartGadget{% endblock %}
 {% block content %}
-<div class="page-header"><div class="container"><h1>My Orders</h1><p>Track and manage your order history</p></div></div>
-<div class="container">
-  <div class="orders-toolbar">
-    <input type="text" placeholder="Search orders..." oninput="filterOrders(this.value)"/>
-    <select onchange="filterOrders(null, this.value)"><option value="">All Status</option><option>Delivered</option><option>Shipped</option><option>Preparing</option></select>
+<div class="page-header">
+  <div class="container">
+    <h1>My Orders</h1>
+    <p>Track and manage your order history</p>
   </div>
+</div>
+
+<div class="container">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+           border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+           color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+           padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if orders %}
+  <div class="orders-toolbar">
+    <input type="text" id="orderSearch" placeholder="Search orders by product name..."
+           oninput="filterOrders(this.value)" title="Search orders"/>
+    <select id="statusFilter" onchange="filterOrders(null, this.value)" title="Filter by status">
+      <option value="">All Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Confirmed">Confirmed</option>
+      <option value="Packed">Packed</option>
+      <option value="Shipped">Shipped</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+  </div>
+
   <div class="orders-table-wrap">
     <table class="orders-table" id="ordersTable">
-      <thead><tr><th>Order ID</th><th>Products</th><th>Date</th><th>Total</th><th>Payment</th><th>Delivery</th><th>Actions</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Products</th>
+          <th>Date</th>
+          <th>Total</th>
+          <th>Payment</th>
+          <th>Delivery</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
         {% for order in orders %}
-        <tr>
-          <td><strong>{{ order.id }}</strong></td>
-          <td>{{ order.products|join(', ') }}</td>
-          <td>{{ order.date }}</td>
-          <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
-          <td><span class="badge-{{ 'success' if order.payment == 'Paid' else 'warning' }}">{{ order.payment }}</span></td>
-          <td><span class="delivery-badge {{ order.delivery|lower|replace(' ', '-') }}">{{ order.delivery }}</span></td>
+        <tr data-products="{{ order.products|join(', ')|lower }}"
+            data-status="{{ order.status }}">
+          <td><strong>#{{ order.id }}</strong></td>
           <td>
-            <a href="{{ url_for('user.profile') }}" class="btn-sm"><i class="fas fa-truck"></i> Track</a>
-            <button class="btn-sm outline" onclick="showToast('Receipt downloaded!', 'success')"><i class="fas fa-download"></i></button>
+            <div style="max-width:200px;">
+              {% for pname in order.products %}
+                <span style="display:block;font-size:0.82rem;color:#374151;">{{ pname }}</span>
+              {% else %}
+                <span style="color:#9ca3af;font-size:0.82rem;">—</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td style="white-space:nowrap;">{{ order.date }}</td>
+          <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
+          <td>
+            <span class="badge-{{ 'success' if order.payment == 'Paid' else ('warning' if order.payment == 'Pending' else 'danger') }}">
+              {{ order.payment or 'Pending' }}
+            </span>
+          </td>
+          <td>
+            <span class="delivery-badge {{ (order.delivery or 'pending')|lower|replace(' ', '-') }}">
+              {{ order.delivery or 'Preparing' }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <a href="{{ url_for('user.orders') }}" class="btn-sm" title="Track Order">
+                <i class="fas fa-truck"></i> Track
+              </a>
+              <button class="btn-sm outline"
+                      onclick="showToast('Order #{{ order.id }} details', 'info')"
+                      title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+  <!-- Order count summary -->
+  <p style="text-align:right;color:#64748b;font-size:0.85rem;margin-top:12px;">
+    Total: <strong>{{ orders|length }}</strong> order(s)
+  </p>
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="empty-state" style="text-align:center;padding:60px 20px;">
+    <i class="fas fa-box-open" style="font-size:3rem;color:#cbd5e1;margin-bottom:16px;display:block;"></i>
+    <h3 style="color:#374151;margin-bottom:8px;">No orders yet</h3>
+    <p style="color:#64748b;margin-bottom:24px;">Start shopping to see your orders here!</p>
+    <a href="{{ url_for('user.products') }}" class="btn-primary">
+      <i class="fas fa-shopping-bag"></i> Browse Products
+    </a>
+  </div>
+  {% endif %}
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterOrders(searchVal, statusVal) {
+  const rows   = document.querySelectorAll('#ordersTable tbody tr');
+  const search = searchVal !== null ? searchVal : document.getElementById('orderSearch').value;
+  const status = statusVal !== null ? statusVal : document.getElementById('statusFilter').value;
+  rows.forEach(row => {
+    const products   = (row.dataset.products || '').toLowerCase();
+    const rowStatus  = (row.dataset.status   || '').toLowerCase();
+    const matchSearch = !search || products.includes(search.toLowerCase());
+    const matchStatus = !status || rowStatus === status.toLowerCase();
+    row.style.display = matchSearch && matchStatus ? '' : 'none';
+  });
+}
+</script>
 {% endblock %}

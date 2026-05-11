@@ -1,101 +1,235 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Checkout — SmartGadget{% endblock %}
 {% block content %}
-<div class="page-header"><div class="container"><h1>Checkout</h1><p>Complete your order securely</p></div></div>
+<div class="page-header">
+  <div class="container">
+    <h1>Checkout</h1>
+    <p>Complete your order securely</p>
+  </div>
+</div>
+
 <div class="container">
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+           border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+           color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+           padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
   <div class="checkout-layout">
+
+    <!-- Left: Forms -->
     <div class="checkout-forms">
-      <!-- Shipping -->
+
+      <!-- Shipping Details — pre-filled from session -->
       <div class="checkout-section">
         <h3><i class="fas fa-map-marker-alt"></i> Shipping Details</h3>
         <div class="form-row">
-          <div class="form-group"><label>First Name</label><input type="text" value="John" placeholder="First Name"/></div>
-          <div class="form-group"><label>Last Name</label><input type="text" value="Doe" placeholder="Last Name"/></div>
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" placeholder="First Name"
+                   value="{{ session.get('user_name', '').split()[0] if session.get('user_name') else '' }}"/>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" placeholder="Last Name"
+                   value="{{ session.get('user_name', '').split()[-1] if session.get('user_name') and session.get('user_name').split()|length > 1 else '' }}"/>
+          </div>
         </div>
-        <div class="form-group"><label>Email</label><input type="email" value="john@example.com"/></div>
-        <div class="form-group"><label>Phone</label><input type="tel" value="+1-555-0101"/></div>
-        <div class="form-group"><label>Address</label><input type="text" value="123 Tech Lane"/></div>
+        <div class="form-group">
+          <label for="coEmail">Email</label>
+          <input type="email" id="coEmail" value="{{ session.get('email', '') }}" readonly
+                 style="background:#f8fafc;cursor:not-allowed;"/>
+        </div>
+        <div class="form-group">
+          <label for="coPhone">Phone</label>
+          <input type="tel" id="coPhone" placeholder="+1-555-0000"/>
+        </div>
+        <div class="form-group">
+          <label for="coAddress">Address</label>
+          <input type="text" id="coAddress" placeholder="123 Tech Lane"/>
+        </div>
         <div class="form-row">
-          <div class="form-group"><label>City</label><input type="text" value="San Francisco"/></div>
-          <div class="form-group"><label>ZIP Code</label><input type="text" value="94105"/></div>
+          <div class="form-group">
+            <label for="coCity">City</label>
+            <input type="text" id="coCity" placeholder="City"/>
+          </div>
+          <div class="form-group">
+            <label for="coZip">ZIP Code</label>
+            <input type="text" id="coZip" placeholder="ZIP"/>
+          </div>
         </div>
-        <div class="form-group"><label>Country</label><select><option>United States</option><option>Canada</option><option>UK</option></select></div>
+        <div class="form-group">
+          <label for="coCountry">Country</label>
+          <select id="coCountry" title="Select country">
+            <option>United States</option>
+            <option>Canada</option>
+            <option>UK</option>
+            <option>Australia</option>
+            <option>Sri Lanka</option>
+            <option>India</option>
+          </select>
+        </div>
       </div>
 
-      <!-- Payment -->
+      <!-- Payment Method -->
       <div class="checkout-section">
         <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
         <div class="payment-methods">
-          <label class="payment-option active">
-            <input type="radio" name="payment" value="card" checked/>
+          <label class="payment-option active" onclick="setPaymentActive(this)">
+            <input type="radio" name="payment" value="Card" checked/>
             <div class="pay-card"><i class="fas fa-credit-card"></i><span>Credit / Debit Card</span></div>
           </label>
-          <label class="payment-option">
-            <input type="radio" name="payment" value="paypal"/>
+          <label class="payment-option" onclick="setPaymentActive(this)">
+            <input type="radio" name="payment" value="PayPal"/>
             <div class="pay-card"><i class="fab fa-paypal"></i><span>PayPal</span></div>
           </label>
-          <label class="payment-option">
-            <input type="radio" name="payment" value="apple"/>
-            <div class="pay-card"><i class="fab fa-apple-pay"></i><span>Apple Pay</span></div>
+          <label class="payment-option" onclick="setPaymentActive(this)">
+            <input type="radio" name="payment" value="Cash on Delivery"/>
+            <div class="pay-card"><i class="fas fa-money-bill-wave"></i><span>Cash on Delivery</span></div>
+          </label>
+          <label class="payment-option" onclick="setPaymentActive(this)">
+            <input type="radio" name="payment" value="Bank Transfer"/>
+            <div class="pay-card"><i class="fas fa-university"></i><span>Bank Transfer</span></div>
           </label>
         </div>
+
+        <!-- Card details (shown for Card payment) -->
         <div class="card-form" id="cardForm">
-          <div class="form-group"><label>Card Number</label><input type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)"/></div>
-          <div class="form-row">
-            <div class="form-group"><label>Expiry Date</label><input type="text" placeholder="MM/YY" maxlength="5"/></div>
-            <div class="form-group"><label>CVV</label><input type="text" placeholder="123" maxlength="3"/></div>
+          <div class="form-group">
+            <label for="cardNumber">Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456"
+                   maxlength="19" oninput="formatCard(this)"/>
           </div>
-          <div class="form-group"><label>Cardholder Name</label><input type="text" placeholder="John Doe"/></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="cardExpiry">Expiry Date</label>
+              <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5"/>
+            </div>
+            <div class="form-group">
+              <label for="cardCvv">CVV</label>
+              <input type="text" id="cardCvv" placeholder="123" maxlength="3"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="cardName">Cardholder Name</label>
+            <input type="text" id="cardName" placeholder="John Doe"/>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Order Summary -->
+    <!-- Right: Order Summary -->
     <div class="checkout-summary">
       <h3>Order Summary</h3>
+
+      <!-- Cart items rendered by JS -->
       <div id="checkoutItems"></div>
+
       <div class="summary-row"><span>Subtotal</span><span id="coSubtotal">$0.00</span></div>
       <div class="summary-row"><span>Shipping</span><span class="free">Free</span></div>
       <div class="summary-row"><span>Tax (8%)</span><span id="coTax">$0.00</span></div>
       <div class="summary-divider"></div>
       <div class="summary-total"><span>Total</span><span id="coTotal">$0.00</span></div>
-      <button class="btn-pay" onclick="placeOrder()"><i class="fas fa-lock"></i> Place Order & Pay</button>
-      <div class="secure-badge"><i class="fas fa-shield-alt"></i> Secured by SSL Encryption</div>
+
+      <!-- Place Order Button — submits hidden form to Flask -->
+      <button class="btn-pay" onclick="placeOrder()" type="button">
+        <i class="fas fa-lock"></i> Place Order &amp; Pay
+      </button>
+
+      <div class="secure-badge">
+        <i class="fas fa-shield-alt"></i> Secured by SSL Encryption
+      </div>
     </div>
   </div>
 </div>
 
+<!-- Hidden form — submitted by JS to Flask backend -->
+<form id="orderForm" method="POST" action="{{ url_for('user.checkout') }}" style="display:none;">
+  <input type="hidden" name="product_id"      id="formProductId"/>
+  <input type="hidden" name="quantity"         id="formQuantity" value="1"/>
+  <input type="hidden" name="payment_method"   id="formPaymentMethod" value="Card"/>
+</form>
+
 <!-- Payment Success Modal -->
-<div class="modal-overlay" id="paymentModal">
+<div class="modal-overlay" id="paymentModal" style="display:none;">
   <div class="modal-box payment-modal">
-    <div class="success-animation"><div class="checkmark"><i class="fas fa-check"></i></div></div>
+    <div class="success-animation">
+      <div class="checkmark"><i class="fas fa-check"></i></div>
+    </div>
     <h2>Payment Successful!</h2>
-    <p>Your order has been placed successfully.</p>
+    <p>Your order has been placed and saved to our system.</p>
     <div class="receipt-box">
-      <div class="receipt-row"><span>Order ID</span><strong id="receiptOrderId">ORD-2024-006</strong></div>
       <div class="receipt-row"><span>Amount</span><strong id="receiptAmount">$0.00</strong></div>
       <div class="receipt-row"><span>Status</span><span class="badge-success">Confirmed</span></div>
     </div>
-    <p class="receipt-email"><i class="fas fa-envelope"></i> Receipt sent to your email</p>
+    <p style="color:#64748b;font-size:0.85rem;margin-top:8px;">
+      <i class="fas fa-envelope"></i> View your order in My Orders
+    </p>
     <div class="modal-actions">
-      <a href="{{ url_for('user.profile') }}" class="btn-primary">Track Order</a>
-      <a href="{{ url_for('user.products') }}" class="btn-outline">Continue Shopping</a>
+      <a href="{{ url_for('user.orders') }}" class="btn-primary">
+        <i class="fas fa-truck"></i> Track Order
+      </a>
+      <a href="{{ url_for('user.products') }}" class="btn-outline">
+        Continue Shopping
+      </a>
     </div>
   </div>
 </div>
+
 {% endblock %}
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', renderCheckoutSummary);
+
 function formatCard(el) {
   el.value = el.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
 }
+
+function setPaymentActive(label) {
+  document.querySelectorAll('.payment-option').forEach(l => l.classList.remove('active'));
+  label.classList.add('active');
+  // Show/hide card form
+  const val = label.querySelector('input').value;
+  document.getElementById('cardForm').style.display = val === 'Card' ? 'block' : 'none';
+}
+
+function getSelectedPayment() {
+  const checked = document.querySelector('input[name="payment"]:checked');
+  return checked ? checked.value : 'Card';
+}
+
 function placeOrder() {
-  const total = document.getElementById('coTotal').textContent;
-  document.getElementById('receiptOrderId').textContent = 'ORD-2024-' + Math.floor(Math.random()*900+100);
+  const cart = JSON.parse(localStorage.getItem('sgCart') || '[]');
+  if (!cart.length) {
+    showToast('Your cart is empty!', 'error');
+    return;
+  }
+
+  const total    = document.getElementById('coTotal').textContent;
+  const method   = getSelectedPayment();
+  const firstItem = cart[0];
+
+  // Fill hidden form and submit to Flask
+  document.getElementById('formProductId').value    = firstItem.id;
+  document.getElementById('formQuantity').value     = firstItem.qty || 1;
+  document.getElementById('formPaymentMethod').value = method;
+
+  // Show success modal first, then submit
   document.getElementById('receiptAmount').textContent = total;
   document.getElementById('paymentModal').style.display = 'flex';
-  clearCart();
+
+  // Submit form after short delay so modal is visible
+  setTimeout(() => {
+    clearCart();
+    document.getElementById('orderForm').submit();
+  }, 2000);
 }
 </script>
 {% endblock %}

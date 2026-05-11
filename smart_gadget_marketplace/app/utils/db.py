@@ -23,14 +23,27 @@ def get_oracle_connection():
 
 def oracle_fetchall(query, params=None):
     """Run a SELECT query and return list of dicts.
-    Column names are lowercased from the alias you gave in SQL.
+    Reads CLOB/BLOB values while connection is still open
+    so they don't fail after the connection closes.
     """
     conn = get_oracle_connection()
     cursor = conn.cursor()
     cursor.execute(query, params or [])
-    # Use the alias name (position 0 of each description tuple), lowercased
     columns = [col[0].lower() for col in cursor.description]
-    rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    raw_rows = cursor.fetchall()
+    rows = []
+    for row in raw_rows:
+        d = {}
+        for col, val in zip(columns, row):
+            # Read LOB objects (CLOB/BLOB) while connection is still open
+            if hasattr(val, 'read'):
+                try:
+                    d[col] = val.read()
+                except Exception:
+                    d[col] = ''
+            else:
+                d[col] = val
+        rows.append(d)
     cursor.close()
     conn.close()
     return rows

@@ -10,88 +10,193 @@
 
 <section class="products-page">
   <div class="container">
-    <!-- Toolbar -->
-    <div class="products-toolbar">
-      <div class="toolbar-left">
-        <div class="search-bar-full">
-          <i class="fas fa-search"></i>
-          <input type="text" id="productSearch" placeholder="Search products..." oninput="filterProducts()"/>
+
+    <!-- Search & Filter Form — posts to Flask backend -->
+    <form method="GET" action="{{ url_for('user.products') }}" id="filterForm">
+      <div class="products-toolbar">
+        <div class="toolbar-left">
+          <div class="search-bar-full">
+            <i class="fas fa-search"></i>
+            <input type="text" name="q" id="productSearch"
+                   placeholder="Search products..."
+                   value="{{ search_query or '' }}"/>
+          </div>
+          <div class="filter-group">
+            <label>Category</label>
+            <select name="category" id="categoryFilter" onchange="this.form.submit()">
+              {% for cat in categories %}
+                <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select id="sortFilter" onchange="sortProducts(this.value)">
+              <option value="default">Default</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Top Rated</option>
+              <option value="popular">Most Popular</option>
+            </select>
+          </div>
         </div>
-        <div class="filter-group">
-          <label>Category</label>
-          <select id="categoryFilter" onchange="filterProducts()">
-            {% for cat in categories %}<option value="{{ cat }}">{{ cat }}</option>{% endfor %}
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>Sort By</label>
-          <select id="sortFilter" onchange="filterProducts()">
-            <option value="default">Default</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="rating">Top Rated</option>
-            <option value="popular">Most Popular</option>
-          </select>
+        <div class="toolbar-right">
+          <span id="productCount">{{ products|length }} products</span>
+          {% if search_query or selected_category != 'All' %}
+            <a href="{{ url_for('user.products') }}" class="btn-sm" style="margin-left:8px;color:#ef4444;">
+              <i class="fas fa-times"></i> Clear
+            </a>
+          {% endif %}
+          <div class="view-toggle">
+            <button type="button" id="gridViewBtn" class="active" onclick="setView('grid')"><i class="fas fa-th-large"></i></button>
+            <button type="button" id="listViewBtn" onclick="setView('list')"><i class="fas fa-list"></i></button>
+          </div>
         </div>
       </div>
-      <div class="toolbar-right">
-        <span id="productCount">{{ products|length }} products</span>
-        <div class="view-toggle">
-          <button id="gridViewBtn" class="active" onclick="setView('grid')"><i class="fas fa-th-large"></i></button>
-          <button id="listViewBtn" onclick="setView('list')"><i class="fas fa-list"></i></button>
-        </div>
-      </div>
+    </form>
+
+    <!-- Active Filters Display -->
+    {% if search_query or selected_category != 'All' %}
+    <div class="active-filters" style="margin-bottom:16px;">
+      <span style="font-size:0.85rem;color:#64748b;">Showing results for: </span>
+      {% if search_query %}
+        <span class="filter-tag" style="background:#e0f2fe;color:#0284c7;padding:3px 10px;border-radius:20px;font-size:0.82rem;margin:0 4px;">
+          "{{ search_query }}"
+        </span>
+      {% endif %}
+      {% if selected_category != 'All' %}
+        <span class="filter-tag" style="background:#f0fdf4;color:#16a34a;padding:3px 10px;border-radius:20px;font-size:0.82rem;margin:0 4px;">
+          {{ selected_category }}
+        </span>
+      {% endif %}
     </div>
+    {% endif %}
 
     <!-- Products Grid -->
+    {% if products %}
     <div class="products-grid large" id="productsContainer">
       {% for product in products %}
-      <div class="product-card" data-category="{{ product.category }}" data-price="{{ product.price }}" data-rating="{{ product.rating }}" data-views="{{ product.views }}" data-name="{{ product.name|lower }}">
-        {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
-        <button class="wishlist-btn" onclick="toggleWishlist(this, {{ product.id }})"><i class="far fa-heart"></i></button>
+      <div class="product-card"
+           data-category="{{ product.category }}"
+           data-price="{{ product.price }}"
+           data-rating="{{ product.rating }}"
+           data-views="{{ product.views }}"
+           data-name="{{ product.name|lower }}">
+
+        {% if product.badge %}
+          <span class="product-badge">{{ product.badge }}</span>
+        {% endif %}
+
+        <!-- Wishlist Button — POST to backend -->
+        <form method="POST" action="{{ url_for('user.add_to_wishlist', product_id=product.id) }}" style="display:inline">
+          <button type="submit" class="wishlist-btn" title="Add to Wishlist">
+            <i class="far fa-heart"></i>
+          </button>
+        </form>
+
         <div class="product-image-wrap">
           <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/>
           <div class="product-overlay">
-            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn"><i class="fas fa-eye"></i> View Details</a>
+            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn">
+              <i class="fas fa-eye"></i> View Details
+            </a>
           </div>
         </div>
+
         <div class="product-info">
           <span class="product-cat">{{ product.category }}</span>
-          <h3 class="product-name"><a href="{{ url_for('user.product_details', product_id=product.id) }}">{{ product.name }}</a></h3>
+          <h3 class="product-name">
+            <a href="{{ url_for('user.product_details', product_id=product.id) }}">{{ product.name }}</a>
+          </h3>
+          <p class="product-brand" style="font-size:0.8rem;color:#64748b;margin:2px 0 6px;">{{ product.brand }}</p>
           <div class="product-rating">
-            <div class="stars">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div>
+            <div class="stars">
+              {% for i in range(5) %}
+                <i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>
+              {% endfor %}
+            </div>
             <span>({{ product.reviews }})</span>
           </div>
           <div class="product-footer">
             <div class="product-price">
               <span class="price">${{ "%.2f"|format(product.price) }}</span>
-              {% if product.original_price %}<span class="original">${{ "%.2f"|format(product.original_price) }}</span>{% endif %}
+              {% if product.original_price and product.original_price > product.price %}
+                <span class="original">${{ "%.2f"|format(product.original_price) }}</span>
+              {% endif %}
             </div>
-            <button class="add-cart-btn" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
-              <i class="fas fa-cart-plus"></i>
-            </button>
+            <div style="display:flex;gap:6px;">
+              <button class="add-cart-btn"
+                      onclick="addToCart({{ product.id }}, '{{ product.name|replace("'","") }}', {{ product.price }}, '{{ product.image }}')"
+                      title="Add to Cart"
+                      {% if product.stock == 0 %}disabled style="opacity:0.5"{% endif %}>
+                <i class="fas fa-cart-plus"></i>
+              </button>
+            </div>
           </div>
+          {% if product.stock == 0 %}
+            <p style="color:#ef4444;font-size:0.75rem;margin-top:4px;"><i class="fas fa-times-circle"></i> Out of Stock</p>
+          {% elif product.stock <= 5 %}
+            <p style="color:#f59e0b;font-size:0.75rem;margin-top:4px;"><i class="fas fa-exclamation-circle"></i> Only {{ product.stock }} left</p>
+          {% endif %}
         </div>
       </div>
       {% endfor %}
     </div>
 
+    {% else %}
     <!-- Empty State -->
-    <div class="empty-state" id="emptyState" style="display:none">
+    <div class="empty-state">
       <i class="fas fa-search"></i>
       <h3>No products found</h3>
       <p>Try adjusting your search or filter criteria</p>
-      <button onclick="resetFilters()" class="btn-primary">Reset Filters</button>
+      <a href="{{ url_for('user.products') }}" class="btn-primary">Reset Filters</a>
     </div>
+    {% endif %}
 
-    <!-- Pagination -->
-    <div class="pagination" id="pagination">
-      <button class="page-btn active">1</button>
-      <button class="page-btn">2</button>
-      <button class="page-btn">3</button>
-      <button class="page-btn">→</button>
-    </div>
   </div>
 </section>
 {% endblock %}
-{% block extra_js %}<script src="{{ url_for('static', filename='js/products.js') }}"></script>{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/products.js') }}"></script>
+<script>
+// Submit search form on Enter
+document.getElementById('productSearch').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    document.getElementById('filterForm').submit();
+  }
+});
+
+// Client-side sort (sorts the already-rendered cards)
+function sortProducts(val) {
+  const container = document.getElementById('productsContainer');
+  if (!container) return;
+  const cards = Array.from(container.querySelectorAll('.product-card'));
+  cards.sort((a, b) => {
+    if (val === 'price-low')  return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
+    if (val === 'price-high') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+    if (val === 'rating')     return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
+    if (val === 'popular')    return parseInt(b.dataset.views) - parseInt(a.dataset.views);
+    return 0;
+  });
+  cards.forEach(c => container.appendChild(c));
+}
+
+// Grid / List view toggle
+function setView(type) {
+  const container = document.getElementById('productsContainer');
+  if (!container) return;
+  if (type === 'list') {
+    container.classList.remove('large');
+    container.classList.add('list-view');
+    document.getElementById('gridViewBtn').classList.remove('active');
+    document.getElementById('listViewBtn').classList.add('active');
+  } else {
+    container.classList.add('large');
+    container.classList.remove('list-view');
+    document.getElementById('gridViewBtn').classList.add('active');
+    document.getElementById('listViewBtn').classList.remove('active');
+  }
+}
+</script>
+{% endblock %}

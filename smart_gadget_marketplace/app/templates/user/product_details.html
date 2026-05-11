@@ -2,75 +2,114 @@
 {% block title %}{{ product.name }} — SmartGadget{% endblock %}
 {% block content %}
 <div class="container">
+
+  <!-- Breadcrumb -->
   <div class="breadcrumb">
-    <a href="{{ url_for('user.home') }}">Home</a> <i class="fas fa-chevron-right"></i>
-    <a href="{{ url_for('user.products') }}">Products</a> <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('user.home') }}">Home</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('user.products') }}">Products</a>
+    <i class="fas fa-chevron-right"></i>
+    <a href="{{ url_for('user.products') }}?category={{ product.category }}">{{ product.category }}</a>
+    <i class="fas fa-chevron-right"></i>
     <span>{{ product.name }}</span>
   </div>
 
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert" style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+           border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+           color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+           padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
   <div class="product-detail-grid">
-    <!-- Images -->
+    <!-- Product Images -->
     <div class="product-images">
       <div class="main-image" id="mainImage">
         <img src="{{ product.image }}" alt="{{ product.name }}" id="mainImg"/>
-        {% if product.badge %}<span class="product-badge">{{ product.badge }}</span>{% endif %}
+        {% if product.badge %}
+          <span class="product-badge">{{ product.badge }}</span>
+        {% endif %}
       </div>
       <div class="image-thumbs">
-        <img src="{{ product.image }}" onclick="changeImage(this)" class="active" alt="thumb1"/>
-        <img src="{{ product.image }}?v=2" onclick="changeImage(this)" alt="thumb2"/>
-        <img src="{{ product.image }}?v=3" onclick="changeImage(this)" alt="thumb3"/>
-        <img src="{{ product.image }}?v=4" onclick="changeImage(this)" alt="thumb4"/>
+        <img src="{{ product.image }}" onclick="changeImage(this)" class="active" alt="View 1"/>
+        <img src="{{ product.image }}" onclick="changeImage(this)" alt="View 2"/>
+        <img src="{{ product.image }}" onclick="changeImage(this)" alt="View 3"/>
+        <img src="{{ product.image }}" onclick="changeImage(this)" alt="View 4"/>
       </div>
     </div>
 
-    <!-- Info -->
+    <!-- Product Info -->
     <div class="product-detail-info">
       <span class="product-cat">{{ product.category }}</span>
       <h1>{{ product.name }}</h1>
+      <p style="color:#64748b;font-size:0.9rem;margin-bottom:8px;">Brand: <strong>{{ product.brand }}</strong></p>
+
       <div class="detail-rating">
-        <div class="stars large">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div>
-        <span>{{ product.rating }}/5</span>
+        <div class="stars large">
+          {% for i in range(5) %}
+            <i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>
+          {% endfor %}
+        </div>
+        <span>{{ "%.1f"|format(product.rating) }}/5</span>
         <span class="sep">|</span>
         <span>{{ product.reviews }} Reviews</span>
         <span class="sep">|</span>
         <span class="stock {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-stock{% endif %}">
-          {% if product.stock > 10 %}<i class="fas fa-check-circle"></i> In Stock
-          {% elif product.stock > 0 %}<i class="fas fa-exclamation-circle"></i> Only {{ product.stock }} left
-          {% else %}<i class="fas fa-times-circle"></i> Out of Stock{% endif %}
+          {% if product.stock > 10 %}
+            <i class="fas fa-check-circle"></i> In Stock
+          {% elif product.stock > 0 %}
+            <i class="fas fa-exclamation-circle"></i> Only {{ product.stock }} left
+          {% else %}
+            <i class="fas fa-times-circle"></i> Out of Stock
+          {% endif %}
         </span>
       </div>
+
       <div class="detail-price">
         <span class="big-price">${{ "%.2f"|format(product.price) }}</span>
-        {% if product.original_price %}<span class="original-price">${{ "%.2f"|format(product.original_price) }}</span>
-        <span class="savings">Save ${{ "%.2f"|format(product.original_price - product.price) }}</span>{% endif %}
+        {% if product.original_price and product.original_price > product.price %}
+          <span class="original-price">${{ "%.2f"|format(product.original_price) }}</span>
+          <span class="savings">Save ${{ "%.2f"|format(product.original_price - product.price) }}</span>
+        {% endif %}
       </div>
 
+      <!-- Quantity -->
       <div class="quantity-row">
         <label>Quantity</label>
         <div class="qty-control">
-          <button onclick="changeQty(-1)">−</button>
+          <button type="button" onclick="changeQty(-1)">−</button>
           <input type="number" id="qty" value="1" min="1" max="{{ product.stock }}"/>
-          <button onclick="changeQty(1)">+</button>
+          <button type="button" onclick="changeQty(1)">+</button>
         </div>
         <span class="stock-note">{{ product.stock }} available</span>
       </div>
 
+      <!-- Actions -->
       <div class="detail-actions">
-        <button class="btn-primary" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
+        <button class="btn-primary"
+                onclick="addToCart({{ product.id }}, '{{ product.name|replace("'","") }}', {{ product.price }}, '{{ product.image }}')"
+                {% if product.stock == 0 %}disabled style="opacity:0.5;cursor:not-allowed"{% endif %}>
           <i class="fas fa-cart-plus"></i> Add to Cart
         </button>
-        <a href="{{ url_for('user.checkout') }}" class="btn-secondary">
-          <i class="fas fa-bolt"></i> Buy Now
-        </a>
-        <button class="wishlist-btn-lg" onclick="toggleWishlist(this, {{ product.id }})">
-          <i class="far fa-heart"></i>
-        </button>
+
+        <!-- Wishlist POST form -->
+        <form method="POST" action="{{ url_for('user.add_to_wishlist', product_id=product.id) }}" style="display:inline">
+          <button type="submit" class="wishlist-btn-lg" title="Add to Wishlist">
+            <i class="far fa-heart"></i>
+          </button>
+        </form>
       </div>
 
       <div class="seller-info">
         <div class="seller-row"><i class="fas fa-store"></i><span>Sold by: <strong>{{ product.brand }} Official Store</strong></span></div>
         <div class="seller-row"><i class="fas fa-shipping-fast"></i><span>Free delivery on orders over $50</span></div>
         <div class="seller-row"><i class="fas fa-undo"></i><span>30-day easy returns</span></div>
+        <div class="seller-row"><i class="fas fa-eye"></i><span>{{ product.views }} people viewed this</span></div>
       </div>
     </div>
   </div>
@@ -78,77 +117,176 @@
   <!-- Tabs -->
   <div class="product-tabs">
     <div class="tab-headers">
-      <button class="tab-btn active" onclick="showTab('description')">Description</button>
-      <button class="tab-btn" onclick="showTab('specifications')">Specifications</button>
-      <button class="tab-btn" onclick="showTab('reviews')">Reviews ({{ reviews|length }})</button>
+      <button class="tab-btn active" onclick="showTab('description', this)">Description</button>
+      <button class="tab-btn" onclick="showTab('specifications', this)">Specifications</button>
+      <button class="tab-btn" onclick="showTab('reviews', this)">Reviews ({{ reviews|length }})</button>
+      <button class="tab-btn" onclick="showTab('write-review', this)">Write a Review</button>
     </div>
+
+    <!-- Description -->
     <div class="tab-content active" id="tab-description">
-      <p>{{ product.description }}</p>
-      <ul class="desc-list">
+      <p>{{ product.description or 'No description available.' }}</p>
+      <ul class="desc-list" style="margin-top:16px;">
         <li>Premium build quality with {{ product.brand }} engineering</li>
         <li>Optimized performance for everyday and professional use</li>
         <li>1-year manufacturer warranty included</li>
         <li>Compatible with major ecosystems and devices</li>
       </ul>
     </div>
+
+    <!-- Specifications -->
     <div class="tab-content" id="tab-specifications">
       <table class="specs-table">
         <tr><td>Brand</td><td>{{ product.brand }}</td></tr>
         <tr><td>Category</td><td>{{ product.category }}</td></tr>
         <tr><td>Model</td><td>{{ product.name }}</td></tr>
         <tr><td>Stock</td><td>{{ product.stock }} units</td></tr>
-        <tr><td>Rating</td><td>{{ product.rating }}/5.0</td></tr>
+        <tr><td>Rating</td><td>{{ "%.1f"|format(product.rating) }}/5.0</td></tr>
+        <tr><td>Total Reviews</td><td>{{ product.reviews }}</td></tr>
+        <tr><td>Views</td><td>{{ product.views }}</td></tr>
         <tr><td>Warranty</td><td>12 Months</td></tr>
         <tr><td>Shipping</td><td>Free on orders $50+</td></tr>
         <tr><td>Returns</td><td>30 Days</td></tr>
       </table>
     </div>
+
+    <!-- Reviews from Oracle DB -->
     <div class="tab-content" id="tab-reviews">
       <div class="reviews-summary">
-        <div class="avg-rating"><span class="big-number">{{ product.rating }}</span><div class="stars large">{% for i in range(5) %}<i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>{% endfor %}</div><p>Based on {{ product.reviews }} reviews</p></div>
+        <div class="avg-rating">
+          <span class="big-number">{{ "%.1f"|format(product.rating) }}</span>
+          <div class="stars large">
+            {% for i in range(5) %}
+              <i class="fas fa-star {% if i < product.rating|int %}filled{% endif %}"></i>
+            {% endfor %}
+          </div>
+          <p>Based on {{ product.reviews }} reviews</p>
+        </div>
       </div>
-      {% for review in reviews[:3] %}
-      <div class="review-item">
-        <div class="review-top"><img src="{{ review.avatar }}" alt="{{ review.user }}"/><div><strong>{{ review.user }}</strong><span>{{ review.date }}</span></div><div class="stars small">{% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}</div></div>
-        <p>{{ review.comment }}</p>
-      </div>
-      {% endfor %}
+
+      {% if reviews %}
+        {% for review in reviews %}
+        <div class="review-item">
+          <div class="review-top">
+            <img src="{{ review.avatar or 'https://ui-avatars.com/api/?name=' + review.user }}" alt="{{ review.user }}"/>
+            <div>
+              <strong>{{ review.user }}</strong>
+              <span>{{ review.date }}</span>
+            </div>
+            <div class="stars small">
+              {% for i in range(review.rating|int) %}
+                <i class="fas fa-star filled"></i>
+              {% endfor %}
+            </div>
+          </div>
+          <p>{{ review.comment }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="text-align:center;padding:40px;color:#64748b;">
+          <i class="fas fa-comment-slash" style="font-size:2rem;margin-bottom:12px;"></i>
+          <p>No reviews yet. Be the first to review this product!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Write a Review — POST to Oracle DB -->
+    <div class="tab-content" id="tab-write-review">
+      <h3 style="margin-bottom:16px;">Share Your Experience</h3>
+      <form method="POST" action="{{ url_for('user.ratings') }}">
+        <input type="hidden" name="product_id" value="{{ product.id }}"/>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;">Rating</label>
+          <div class="star-select" id="starSelect">
+            {% for i in range(1,6) %}
+            <i class="fas fa-star" data-val="{{ i }}" onclick="selectStar({{ i }})"
+               style="font-size:1.8rem;cursor:pointer;color:#d1d5db;margin-right:4px;"></i>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="rating" id="ratingInput" value="5"/>
+        </div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label style="display:block;margin-bottom:8px;font-weight:600;">Your Review</label>
+          <textarea name="comment" rows="4" placeholder="Tell others about your experience..."
+                    style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;font-size:0.9rem;resize:vertical;"></textarea>
+        </div>
+        <button type="submit" class="btn-primary">
+          <i class="fas fa-paper-plane"></i> Submit Review
+        </button>
+      </form>
     </div>
   </div>
 
-  <!-- Related Products -->
+  <!-- Related Products from Oracle DB -->
   {% if related %}
   <div class="related-products">
     <h3>Related Products</h3>
     <div class="products-grid">
       {% for p in related %}
       <div class="product-card">
-        <div class="product-image-wrap"><img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy"/></div>
+        <div class="product-image-wrap">
+          <img src="{{ p.image }}" alt="{{ p.name }}" loading="lazy"/>
+          <div class="product-overlay">
+            <a href="{{ url_for('user.product_details', product_id=p.id) }}" class="overlay-btn">
+              <i class="fas fa-eye"></i> View
+            </a>
+          </div>
+        </div>
         <div class="product-info">
-          <h3 class="product-name"><a href="{{ url_for('user.product_details', product_id=p.id) }}">{{ p.name }}</a></h3>
-          <div class="product-footer"><span class="price">${{ "%.2f"|format(p.price) }}</span><button class="add-cart-btn" onclick="addToCart({{ p.id }}, '{{ p.name }}', {{ p.price }}, '{{ p.image }}')"><i class="fas fa-cart-plus"></i></button></div>
+          <h3 class="product-name">
+            <a href="{{ url_for('user.product_details', product_id=p.id) }}">{{ p.name }}</a>
+          </h3>
+          <div class="stars small" style="margin:4px 0;">
+            {% for i in range(5) %}
+              <i class="fas fa-star {% if i < p.rating|int %}filled{% endif %}"></i>
+            {% endfor %}
+          </div>
+          <div class="product-footer">
+            <span class="price">${{ "%.2f"|format(p.price) }}</span>
+            <button class="add-cart-btn"
+                    onclick="addToCart({{ p.id }}, '{{ p.name|replace("'","") }}', {{ p.price }}, '{{ p.image }}')">
+              <i class="fas fa-cart-plus"></i>
+            </button>
+          </div>
         </div>
       </div>
       {% endfor %}
     </div>
   </div>
   {% endif %}
+
 </div>
 {% endblock %}
-{% block extra_js %}<script>
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/products.js') }}"></script>
+<script>
 function changeImage(el) {
   document.querySelectorAll('.image-thumbs img').forEach(i => i.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('mainImg').src = el.src;
 }
+
 function changeQty(delta) {
   const input = document.getElementById('qty');
-  input.value = Math.max(1, parseInt(input.value) + delta);
+  const max   = parseInt(input.max) || 99;
+  input.value = Math.min(max, Math.max(1, parseInt(input.value) + delta));
 }
-function showTab(tab) {
+
+function showTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
+  if (btn) btn.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
 }
-</script>{% endblock %}
+
+function selectStar(val) {
+  document.getElementById('ratingInput').value = val;
+  document.querySelectorAll('#starSelect .fa-star').forEach((s, i) => {
+    s.style.color = i < val ? '#f59e0b' : '#d1d5db';
+  });
+}
+// Default: highlight 5 stars
+selectStar(5);
+</script>
+{% endblock %}
