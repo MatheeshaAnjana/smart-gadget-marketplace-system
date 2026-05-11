@@ -2,35 +2,67 @@
   <div class="sidebar-header">
     <div class="logo-icon"><i class="fas fa-bolt"></i></div>
     <span>Smart<strong>Gadget</strong></span>
-    <button class="sidebar-close" id="sidebarClose"><i class="fas fa-times"></i></button>
+    <button class="sidebar-close" id="sidebarClose" title="Close Sidebar">
+      <i class="fas fa-times"></i>
+    </button>
   </div>
+
+  <!-- Admin user info from session -->
+  <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:8px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'Admin')|urlencode }}&size=36&background=ffffff&color=0ea5e9"
+           alt="{{ session.get('user_name', 'Admin') }}"
+           style="border-radius:50%;width:36px;height:36px;"/>
+      <div>
+        <div style="font-weight:600;font-size:0.85rem;color:#fff;">
+          {{ session.get('user_name', 'Admin') }}
+        </div>
+        <div style="font-size:0.72rem;color:rgba(255,255,255,0.6);">
+          Administrator
+        </div>
+      </div>
+    </div>
+  </div>
+
   <nav class="sidebar-nav">
     <p class="nav-section-label">Main</p>
-    <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
       <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
     </a>
+
     <p class="nav-section-label">Catalog</p>
-    <a href="{{ url_for('admin.products') }}" class="sidebar-link {% if request.endpoint == 'admin.products' %}active{% endif %}">
+    <a href="{{ url_for('admin.products') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.products' %}active{% endif %}">
       <i class="fas fa-box-open"></i><span>Products</span>
     </a>
-    <a href="{{ url_for('admin.add_product') }}" class="sidebar-link {% if request.endpoint == 'admin.add_product' %}active{% endif %}">
+    <a href="{{ url_for('admin.add_product') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.add_product' %}active{% endif %}">
       <i class="fas fa-plus-circle"></i><span>Add Product</span>
     </a>
+
     <p class="nav-section-label">Management</p>
-    <a href="{{ url_for('admin.users') }}" class="sidebar-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+    <a href="{{ url_for('admin.users') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
       <i class="fas fa-users"></i><span>Users</span>
     </a>
-    <a href="{{ url_for('admin.orders') }}" class="sidebar-link {% if request.endpoint == 'admin.orders' %}active{% endif %}">
+    <a href="{{ url_for('admin.orders') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.orders' %}active{% endif %}">
       <i class="fas fa-shopping-bag"></i><span>Orders</span>
     </a>
-    <a href="{{ url_for('admin.ratings') }}" class="sidebar-link {% if request.endpoint == 'admin.ratings' %}active{% endif %}">
+    <a href="{{ url_for('admin.ratings') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.ratings' %}active{% endif %}">
       <i class="fas fa-star"></i><span>Ratings</span>
     </a>
+
     <p class="nav-section-label">Insights</p>
-    <a href="{{ url_for('admin.analytics') }}" class="sidebar-link {% if request.endpoint == 'admin.analytics' %}active{% endif %}">
+    <a href="{{ url_for('admin.analytics') }}"
+       class="sidebar-link {% if request.endpoint == 'admin.analytics' %}active{% endif %}">
       <i class="fas fa-chart-line"></i><span>Analytics</span>
     </a>
+
     <div class="sidebar-divider"></div>
+
     <a href="{{ url_for('user.home') }}" class="sidebar-link">
       <i class="fas fa-store"></i><span>View Store</span>
     </a>

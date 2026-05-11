@@ -1,41 +1,60 @@
 <footer class="footer">
   <div class="footer-container">
     <div class="footer-brand">
-      <a href="#" class="footer-logo"><div class="logo-icon"><i class="fas fa-bolt"></i></div><span>Smart<strong>Gadget</strong></span></a>
+      <a href="{{ url_for('user.home') }}" class="footer-logo">
+        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+        <span>Smart<strong>Gadget</strong></span>
+      </a>
       <p>Your one-stop destination for the latest and greatest tech gadgets. Quality products, fast delivery, exceptional service.</p>
       <div class="footer-socials">
-        <a href="#"><i class="fab fa-facebook-f"></i></a>
-        <a href="#"><i class="fab fa-twitter"></i></a>
-        <a href="#"><i class="fab fa-instagram"></i></a>
-        <a href="#"><i class="fab fa-youtube"></i></a>
+        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
       </div>
     </div>
+
     <div class="footer-links">
       <h4>Quick Links</h4>
       <ul>
         <li><a href="{{ url_for('user.home') }}">Home</a></li>
         <li><a href="{{ url_for('user.products') }}">Products</a></li>
-        <li><a href="{{ url_for('user.orders') }}">Orders</a></li>
+        <li><a href="{{ url_for('user.orders') }}">My Orders</a></li>
         <li><a href="{{ url_for('user.wishlist') }}">Wishlist</a></li>
+        <li><a href="{{ url_for('user.profile') }}">My Profile</a></li>
+        <li><a href="{{ url_for('user.ratings') }}">Reviews</a></li>
       </ul>
     </div>
+
     <div class="footer-links">
       <h4>Categories</h4>
       <ul>
-        <li><a href="#">Audio</a></li>
-        <li><a href="#">Laptops</a></li>
-        <li><a href="#">Wearables</a></li>
-        <li><a href="#">Smart Home</a></li>
-        <li><a href="#">Gaming</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Audio">Audio</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Laptops">Laptops</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Wearables">Wearables</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Smart+Home">Smart Home</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Gaming">Gaming</a></li>
+        <li><a href="{{ url_for('user.products') }}?category=Drones">Drones</a></li>
       </ul>
     </div>
+
     <div class="footer-newsletter">
       <h4>Newsletter</h4>
       <p>Subscribe to get the latest deals and product launches.</p>
       <div class="newsletter-form">
-        <input type="email" placeholder="Enter your email"/>
-        <button onclick="subscribeNewsletter()">Subscribe</button>
+        <input type="email" id="footerEmail" placeholder="Enter your email" title="Newsletter email"/>
+        <button onclick="subscribeNewsletter()" type="button">Subscribe</button>
       </div>
+
+      <!-- Logged in user info -->
+      {% if session.get('user_name') %}
+      <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.1);border-radius:8px;font-size:0.82rem;">
+        <i class="fas fa-user-circle"></i>
+        Logged in as <strong>{{ session.get('user_name') }}</strong>
+        <a href="{{ url_for('auth.logout') }}" style="margin-left:8px;color:#fca5a5;">Logout</a>
+      </div>
+      {% endif %}
+
       <div class="footer-badges">
         <span><i class="fas fa-shield-alt"></i> Secure Payments</span>
         <span><i class="fas fa-truck"></i> Fast Delivery</span>
@@ -43,6 +62,7 @@
       </div>
     </div>
   </div>
+
   <div class="footer-bottom">
     <p>&copy; 2024 SmartGadget Marketplace. All rights reserved.</p>
     <div class="payment-icons">

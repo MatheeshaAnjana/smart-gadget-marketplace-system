@@ -14,37 +14,66 @@
     </ul>
 
     <div class="nav-actions">
-      <div class="nav-search">
-        <input type="text" id="navSearch" placeholder="Search gadgets..." autocomplete="off"/>
-        <button><i class="fas fa-search"></i></button>
+      <!-- Search bar — submits to products page -->
+      <form action="{{ url_for('user.products') }}" method="GET" class="nav-search" id="navSearchForm">
+        <input type="text" name="q" id="navSearch"
+               placeholder="Search gadgets..." autocomplete="off"
+               value="{{ request.args.get('q', '') }}"/>
+        <button type="submit" title="Search"><i class="fas fa-search"></i></button>
         <div class="search-results" id="searchResults"></div>
-      </div>
-      <button class="notif-btn" onclick="toggleNotifications()">
+      </form>
+
+      <!-- Notifications -->
+      <button class="notif-btn" onclick="toggleNotifications()" title="Notifications">
         <i class="fas fa-bell"></i>
-        <span class="badge">3</span>
+        <span class="badge" id="notifBadge">3</span>
       </button>
-      <a href="{{ url_for('user.cart') }}" class="cart-btn">
+
+      <!-- Cart -->
+      <a href="{{ url_for('user.cart') }}" class="cart-btn" title="Shopping Cart">
         <i class="fas fa-shopping-cart"></i>
         <span class="badge" id="cartCount">0</span>
       </a>
-      <a href="{{ url_for('user.profile') }}" class="profile-btn">
-        <img src="https://i.pravatar.cc/36?img=3" alt="User"/>
+
+      <!-- Profile — shows real user name from session -->
+      <a href="{{ url_for('user.profile') }}" class="profile-btn" title="{{ session.get('user_name', 'Profile') }}">
+        <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'U')|urlencode }}&size=36&background=0ea5e9&color=fff"
+             alt="{{ session.get('user_name', 'User') }}"/>
       </a>
-      <a href="{{ url_for('auth.logout') }}" class="nav-logout"><i class="fas fa-sign-out-alt"></i></a>
+
+      <!-- Logout -->
+      <a href="{{ url_for('auth.logout') }}" class="nav-logout" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </a>
     </div>
 
-    <button class="hamburger" id="hamburger">
+    <button class="hamburger" id="hamburger" title="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
 
   <!-- Notification dropdown -->
   <div class="notification-panel" id="notifPanel">
-    <div class="notif-header"><h4>Notifications</h4><button onclick="clearNotifications()">Clear all</button></div>
+    <div class="notif-header">
+      <h4>Notifications</h4>
+      <button onclick="clearNotifications()">Clear all</button>
+    </div>
     <div class="notif-list">
-      <div class="notif-item unread"><i class="fas fa-box notif-icon delivery"></i><div><p>Your order <strong>ORD-2024-003</strong> is out for delivery!</p><span>2 min ago</span></div></div>
-      <div class="notif-item unread"><i class="fas fa-tag notif-icon sale"></i><div><p>Flash sale! 30% off on Sony headphones</p><span>1 hr ago</span></div></div>
-      <div class="notif-item"><i class="fas fa-star notif-icon review"></i><div><p>New review on your product wishlist item</p><span>3 hr ago</span></div></div>
+      <div class="notif-item unread">
+        <i class="fas fa-box notif-icon delivery"></i>
+        <div><p>Your recent order is being processed!</p><span>Just now</span></div>
+      </div>
+      <div class="notif-item unread">
+        <i class="fas fa-tag notif-icon sale"></i>
+        <div><p>Flash sale! 30% off on Sony headphones</p><span>1 hr ago</span></div>
+      </div>
+      <div class="notif-item">
+        <i class="fas fa-star notif-icon review"></i>
+        <div><p>New products added to your category</p><span>3 hr ago</span></div>
+      </div>
+    </div>
+    <div style="padding:10px;text-align:center;border-top:1px solid #e2e8f0;">
+      <a href="{{ url_for('user.orders') }}" style="font-size:0.82rem;color:#0ea5e9;">View all orders</a>
     </div>
   </div>
 </nav>
