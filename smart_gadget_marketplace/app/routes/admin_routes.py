@@ -213,37 +213,40 @@ def delete_product(product_id):
     flash('Product removed.', 'info')
     return redirect(url_for('admin.products'))
 
-# ── Users ─────────────────────────────────────────────────────
+# ── Users ────────────────────────────────────────────────────
 @admin_bp.route('/users')
 def users():
     guard = admin_required()
     if guard: return guard
 
-    # Use simple query without table alias and without reserved word columns
-    # to avoid ORA-00923
-    usr_raw = oracle_fetchall(
-        "SELECT customer_id AS uid, full_name AS uname, "
-        "email AS uemail, phone AS uphone, "
-        "status AS ustatus, TO_CHAR(created_at,'Mon YYYY') AS ujoined "
-        "FROM customers ORDER BY created_at DESC"
+    # Use direct connection with positional access to avoid ALL reserved word issues
+    from app.utils.db import get_oracle_connection
+    conn = get_oracle_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT customer_id, full_name, email, phone, status, "
+        "TO_CHAR(created_at, 'Mon YYYY') FROM customers ORDER BY created_at DESC"
     )
+    raw = cursor.fetchall()
+    cursor.close()
+    conn.close()
 
     all_users = []
-    for u in usr_raw:
-        # Fetch order count in a separate query to avoid subquery alias issues
+    for row in raw:
+        uid = row[0]
         count_rows = oracle_fetchall(
             "SELECT COUNT(*) AS cnt FROM orders WHERE customer_id = :1",
-            [u['uid']]
+            [uid]
         )
         order_count = int(count_rows[0]['cnt']) if count_rows else 0
         all_users.append({
-            'id':      u['uid'],
-            'name':    u['uname'],
-            'email':   u['uemail'],
-            'phone':   u['uphone'],
+            'id':      row[0],
+            'name':    row[1],
+            'email':   row[2],
+            'phone':   row[3] or '—',
             'address': '—',
-            'status':  u['ustatus'],
-            'joined':  u['ujoined'],
+            'status':  row[4],
+            'joined':  row[5],
             'orders':  order_count,
         })
 
@@ -310,7 +313,7 @@ def ratings():
         "TO_CHAR(rv.review_date,'Mon DD, YYYY') AS rdate "
         "FROM reviews rv "
         "JOIN customers c ON rv.customer_id = c.customer_id "
-        "JOIN products p  ON rv.product_id  = p.product_id "
+        "JOIN products p ON rv.product_id = p.product_id "
         "ORDER BY rv.review_date DESC"
     )
     all_reviews = []
@@ -341,7 +344,6 @@ def analytics():
     )
     stats = dict(stats_rows[0]) if stats_rows else {}
 
-    # Monthly revenue
     monthly = oracle_fetchall(
         "SELECT TO_CHAR(paid_at,'Mon') AS mth, SUM(amount) AS mtotal "
         "FROM payments WHERE status = 'Paid' AND paid_at >= ADD_MONTHS(SYSDATE,-12) "
@@ -351,7 +353,6 @@ def analytics():
     stats['monthly_sales']  = [float(r['mtotal']) for r in monthly]
     stats['monthly_labels'] = [r['mth'] for r in monthly]
 
-    # Category sales
     cat_sales = oracle_fetchall(
         "SELECT c.name AS catname, SUM(oi.quantity) AS sold "
         "FROM order_items oi "
@@ -361,7 +362,6 @@ def analytics():
     )
     stats['category_sales'] = {r['catname']: int(r['sold']) for r in cat_sales}
 
-    # Top products by views
     top_products = oracle_fetchall(
         "SELECT name AS pname, views AS pviews, image_url AS pimage "
         "FROM products WHERE status = 'Active' ORDER BY views DESC FETCH FIRST 5 ROWS ONLY"
@@ -371,7 +371,6 @@ def analytics():
         for p in top_products
     ]
 
-    # MongoDB analytics
     mongo = get_mongo_db()
 
     peak_hours = list(mongo.activity_logs.aggregate([

@@ -23,12 +23,14 @@ def get_oracle_connection():
 
 def oracle_fetchall(query, params=None):
     """Run a SELECT query and return list of dicts.
-    Reads CLOB/BLOB values while connection is still open
-    so they don't fail after the connection closes.
+    - Normalizes whitespace to fix missing-space bugs from string concatenation
+    - Reads CLOB/BLOB values while connection is still open
     """
     conn = get_oracle_connection()
     cursor = conn.cursor()
-    cursor.execute(query, params or [])
+    # Fix missing spaces from Python multiline string concatenation
+    clean_query = ' '.join(query.split())
+    cursor.execute(clean_query, params or [])
     columns = [col[0].lower() for col in cursor.description]
     raw_rows = cursor.fetchall()
     rows = []
@@ -52,7 +54,8 @@ def oracle_execute(query, params=None):
     """Run INSERT/UPDATE/DELETE with commit."""
     conn = get_oracle_connection()
     cursor = conn.cursor()
-    cursor.execute(query, params or [])
+    clean_query = ' '.join(query.split())
+    cursor.execute(clean_query, params or [])
     conn.commit()
     cursor.close()
     conn.close()

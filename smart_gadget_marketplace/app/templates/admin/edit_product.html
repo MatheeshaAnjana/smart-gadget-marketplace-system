@@ -2,42 +2,164 @@
 {% block title %}Edit Product — Admin{% endblock %}
 {% block content %}
 <div class="admin-page-header">
-  <div><h2>Edit Product</h2><p>Update product information</p></div>
+  <div><h2>Edit Product</h2><p>Update product information in Oracle DB</p></div>
   <a href="{{ url_for('admin.products') }}" class="btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+         border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+         color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+         padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
 <div class="admin-card">
-  <div class="product-form-layout">
+  <!-- Real POST form → Flask → Oracle UPDATE -->
+  <form method="POST" action="{{ url_for('admin.edit_product', product_id=product.id) }}"
+        class="product-form-layout">
     <div class="form-main">
+
       <div class="form-section">
         <h4>Basic Information</h4>
-        <div class="form-group"><label>Product Name *</label><input type="text" value="{{ product.name }}"/></div>
-        <div class="form-row">
-          <div class="form-group"><label>Brand *</label><input type="text" value="{{ product.brand }}"/></div>
-          <div class="form-group"><label>Category *</label><select><option {% if product.category == 'Audio' %}selected{% endif %}>Audio</option><option {% if product.category == 'Tablets' %}selected{% endif %}>Tablets</option><option {% if product.category == 'Laptops' %}selected{% endif %}>Laptops</option><option {% if product.category == 'Wearables' %}selected{% endif %}>Wearables</option><option {% if product.category == 'Gaming' %}selected{% endif %}>Gaming</option><option {% if product.category == 'Cameras' %}selected{% endif %}>Cameras</option><option {% if product.category == 'Accessories' %}selected{% endif %}>Accessories</option></select></div>
+        <div class="form-group">
+          <label for="pName">Product Name *</label>
+          <input type="text" id="pName" name="name"
+                 value="{{ product.name }}" required/>
         </div>
-        <div class="form-group"><label>Description *</label><textarea rows="4">{{ product.description }}</textarea></div>
-      </div>
-      <div class="form-section">
-        <h4>Pricing & Stock</h4>
         <div class="form-row">
-          <div class="form-group"><label>Price ($) *</label><input type="number" value="{{ product.price }}" step="0.01"/></div>
-          <div class="form-group"><label>Original Price ($)</label><input type="number" value="{{ product.original_price }}" step="0.01"/></div>
-          <div class="form-group"><label>Stock</label><input type="number" value="{{ product.stock }}"/></div>
+          <div class="form-group">
+            <label for="pBrand">Brand *</label>
+            <input type="text" id="pBrand" name="brand"
+                   value="{{ product.brand }}" required/>
+          </div>
+          <div class="form-group">
+            <label for="pCategory">Category *</label>
+            <select id="pCategory" name="category_id" title="Select category" required>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}"
+                  {% if cat.id == product.category_id %}selected{% endif %}>
+                  {{ cat.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="pDesc">Description *</label>
+          <textarea id="pDesc" name="description" rows="4" required>{{ product.description or '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4>Pricing &amp; Stock</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pPrice">Price ($) *</label>
+            <input type="number" id="pPrice" name="price"
+                   value="{{ product.price }}" step="0.01" min="0" required/>
+          </div>
+          <div class="form-group">
+            <label for="pOrigPrice">Original Price ($)</label>
+            <input type="number" id="pOrigPrice" name="original_price"
+                   value="{{ product.original_price or '' }}" step="0.01" min="0"/>
+          </div>
+          <div class="form-group">
+            <label for="pStock">Stock *</label>
+            <input type="number" id="pStock" name="stock"
+                   value="{{ product.stock }}" min="0" required/>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h4>Product Badge</h4>
+        <div class="badge-options">
+          <label class="badge-opt">
+            <input type="radio" name="badge" value=""
+                   {% if not product.badge %}checked{% endif %}/>
+            <span>None</span>
+          </label>
+          <label class="badge-opt">
+            <input type="radio" name="badge" value="New"
+                   {% if product.badge == 'New' %}checked{% endif %}/>
+            <span class="badge-preview new">New</span>
+          </label>
+          <label class="badge-opt">
+            <input type="radio" name="badge" value="Best Seller"
+                   {% if product.badge == 'Best Seller' %}checked{% endif %}/>
+            <span class="badge-preview bestseller">Best Seller</span>
+          </label>
+          <label class="badge-opt">
+            <input type="radio" name="badge" value="Hot"
+                   {% if product.badge == 'Hot' %}checked{% endif %}/>
+            <span class="badge-preview hot">Hot</span>
+          </label>
+          <label class="badge-opt">
+            <input type="radio" name="badge" value="Sale"
+                   {% if product.badge == 'Sale' %}checked{% endif %}/>
+            <span class="badge-preview sale">Sale</span>
+          </label>
+          <label class="badge-opt">
+            <input type="radio" name="badge" value="Limited"
+                   {% if product.badge == 'Limited' %}checked{% endif %}/>
+            <span class="badge-preview">Limited</span>
+          </label>
         </div>
       </div>
     </div>
+
     <div class="form-side">
       <div class="form-section">
-        <h4>Current Image</h4>
-        <img src="{{ product.image }}" alt="{{ product.name }}" style="width:100%;border-radius:8px;"/>
-        <div class="form-group" style="margin-top:1rem"><label>Image URL</label><input type="url" value="{{ product.image }}"/></div>
+        <h4>Product Image</h4>
+        <div id="imagePreview">
+          <img id="previewImg" src="{{ product.image or '' }}" alt="{{ product.name }}"
+               style="width:100%;border-radius:8px;max-height:200px;object-fit:cover;"/>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label for="imgUrl">Image URL</label>
+          <input type="url" id="imgUrl" name="image_url"
+                 value="{{ product.image or '' }}"
+                 placeholder="https://..."
+                 oninput="document.getElementById('previewImg').src=this.value"/>
+        </div>
       </div>
+
       <div class="form-section">
-        <h4>Actions</h4>
-        <button class="btn-primary full" onclick="showToast('Product updated!', 'success')"><i class="fas fa-save"></i> Save Changes</button>
-        <button class="btn-danger full" style="margin-top:0.5rem" onclick="if(confirm('Delete?')) showToast('Product deleted','success')"><i class="fas fa-trash"></i> Delete Product</button>
+        <h4>Save to Oracle DB</h4>
+        <button type="submit" class="btn-primary full">
+          <i class="fas fa-save"></i> Save Changes
+        </button>
+        <a href="{{ url_for('admin.products') }}"
+           class="btn-outline full" style="margin-top:0.5rem;display:block;text-align:center;">
+          <i class="fas fa-times"></i> Cancel
+        </a>
+      </div>
+
+      <!-- Separate delete form -->
+      <div class="form-section" style="margin-top:1rem;">
+        <form method="POST"
+              action="{{ url_for('admin.delete_product', product_id=product.id) }}"
+              onsubmit="return confirm('Remove this product from the marketplace?')">
+          <button type="submit" class="btn-danger full">
+            <i class="fas fa-trash"></i> Delete Product
+          </button>
+        </form>
+      </div>
+
+      <!-- Product info summary -->
+      <div class="form-section" style="margin-top:1rem;background:#f8fafc;border-radius:8px;padding:12px;">
+        <h4 style="font-size:0.85rem;margin-bottom:8px;">Product Info</h4>
+        <div style="font-size:0.78rem;color:#64748b;line-height:1.8;">
+          <div>ID: <strong>#{{ product.id }}</strong></div>
+          <div>Current Stock: <strong>{{ product.stock }}</strong></div>
+          <div>Current Price: <strong>${{ "%.2f"|format(product.price) }}</strong></div>
+        </div>
       </div>
     </div>
-  </div>
+  </form>
 </div>
 {% endblock %}
