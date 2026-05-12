@@ -2,43 +2,173 @@
 {% block title %}Products — Admin{% endblock %}
 {% block content %}
 <div class="admin-page-header">
-  <div><h2>Products</h2><p>Manage your product catalog</p></div>
-  <a href="{{ url_for('admin.add_product') }}" class="btn-primary"><i class="fas fa-plus"></i> Add Product</a>
+  <div>
+    <h2>Products</h2>
+    <p>Manage your product catalog — {{ products|length }} products in Oracle DB</p>
+  </div>
+  <a href="{{ url_for('admin.add_product') }}" class="btn-primary">
+    <i class="fas fa-plus"></i> Add Product
+  </a>
 </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+         border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+         color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+         padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
 <div class="admin-card">
   <div class="table-toolbar">
-    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search products..." oninput="filterTable(this.value, 'productsTable')"/></div>
-    <select><option>All Categories</option><option>Audio</option><option>Tablets</option><option>Laptops</option></select>
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="productSearch" placeholder="Search products..."
+             oninput="filterTable(this.value)" title="Search products"/>
+    </div>
+    <select id="categoryFilterAdmin" onchange="filterByCategory(this.value)" title="Filter by category">
+      <option value="">All Categories</option>
+      {% set categories = products | map(attribute='category') | unique | list %}
+      {% for cat in categories %}
+        <option value="{{ cat }}">{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <select id="stockFilter" onchange="filterByStock(this.value)" title="Filter by stock">
+      <option value="">All Stock</option>
+      <option value="in">In Stock</option>
+      <option value="low">Low Stock (≤5)</option>
+      <option value="out">Out of Stock</option>
+    </select>
   </div>
+
   <table class="admin-table" id="productsTable">
-    <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Rating</th><th>Actions</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Stock</th>
+        <th>Rating</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
     <tbody>
       {% for product in products %}
-      <tr>
-        <td><img src="{{ product.image }}" alt="{{ product.name }}" class="table-thumb"/></td>
-        <td><strong>{{ product.name }}</strong><br><small>{{ product.brand }}</small></td>
+      <tr data-name="{{ product.name|lower }}"
+          data-category="{{ product.category }}"
+          data-stock="{{ product.stock }}">
+        <td>
+          <img src="{{ product.image }}" alt="{{ product.name }}" class="table-thumb"
+               style="width:50px;height:50px;object-fit:cover;border-radius:8px;"/>
+        </td>
+        <td>
+          <strong>{{ product.name }}</strong>
+          <br>
+          <small style="color:#64748b;">{{ product.brand }}</small>
+          {% if product.badge %}
+            <br><span class="product-badge" style="font-size:0.65rem;padding:2px 6px;">{{ product.badge }}</span>
+          {% endif %}
+        </td>
         <td><span class="cat-badge">{{ product.category }}</span></td>
         <td><strong>${{ "%.2f"|format(product.price) }}</strong></td>
-        <td><span class="{{ 'badge-success' if product.stock > 10 else 'badge-warning' }}">{{ product.stock }}</span></td>
         <td>
-          <div class="stars small">{% for i in range(product.rating|int) %}<i class="fas fa-star"></i>{% endfor %}</div>
-          {{ product.rating }}
+          <span class="{{ 'badge-success' if product.stock > 10 else ('badge-warning' if product.stock > 0 else 'badge-danger') }}">
+            {{ product.stock }}
+          </span>
+        </td>
+        <td>
+          <div class="stars small">
+            {% for i in range(product.rating|int) %}
+              <i class="fas fa-star" style="color:#f59e0b;font-size:0.7rem;"></i>
+            {% endfor %}
+          </div>
+          <span style="font-size:0.8rem;">{{ "%.1f"|format(product.rating) }}</span>
+        </td>
+        <td>
+          <span class="{{ 'badge-success' if product.status == 'Active' else 'badge-danger' }}">
+            {{ product.status }}
+          </span>
         </td>
         <td class="action-btns">
-          <a href="{{ url_for('admin.edit_product', product_id=product.id) }}" class="btn-icon edit"><i class="fas fa-edit"></i></a>
-          <button class="btn-icon delete" onclick="deleteProduct({{ product.id }})"><i class="fas fa-trash"></i></button>
-          <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="btn-icon view" target="_blank"><i class="fas fa-eye"></i></a>
+          <a href="{{ url_for('admin.edit_product', product_id=product.id) }}"
+             class="btn-icon edit" title="Edit Product">
+            <i class="fas fa-edit"></i>
+          </a>
+          <!-- Delete — POST to Flask → sets status Inactive in Oracle -->
+          <form method="POST" action="{{ url_for('admin.delete_product', product_id=product.id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('Remove this product from the marketplace?')">
+            <button type="submit" class="btn-icon delete" title="Delete Product">
+              <i class="fas fa-trash"></i>
+            </button>
+          </form>
+          <a href="{{ url_for('user.product_details', product_id=product.id) }}"
+             class="btn-icon view" target="_blank" title="View in Store">
+            <i class="fas fa-eye"></i>
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="8" style="text-align:center;color:#94a3b8;padding:40px;">
+          No products found. <a href="{{ url_for('admin.add_product') }}">Add one now</a>
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+
+  <p style="text-align:right;color:#64748b;font-size:0.82rem;margin-top:8px;">
+    Showing <span id="visibleCount">{{ products|length }}</span> of {{ products|length }} products
+  </p>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-function deleteProduct(id) {
-  if(confirm('Delete this product?')) showToast('Product deleted', 'success');
+function filterTable(val) {
+  applyFilters();
+}
+
+function filterByCategory(val) {
+  applyFilters();
+}
+
+function filterByStock(val) {
+  applyFilters();
+}
+
+function applyFilters() {
+  const search   = document.getElementById('productSearch').value.toLowerCase();
+  const category = document.getElementById('categoryFilterAdmin').value;
+  const stock    = document.getElementById('stockFilter').value;
+  const rows     = document.querySelectorAll('#productsTable tbody tr[data-name]');
+  let visible    = 0;
+
+  rows.forEach(row => {
+    const name    = (row.dataset.name    || '');
+    const cat     = (row.dataset.category || '');
+    const stockVal = parseInt(row.dataset.stock || '0');
+
+    const matchSearch   = !search   || name.includes(search);
+    const matchCategory = !category || cat === category;
+    let   matchStock    = true;
+    if (stock === 'in')  matchStock = stockVal > 5;
+    if (stock === 'low') matchStock = stockVal > 0 && stockVal <= 5;
+    if (stock === 'out') matchStock = stockVal === 0;
+
+    const show = matchSearch && matchCategory && matchStock;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const counter = document.getElementById('visibleCount');
+  if (counter) counter.textContent = visible;
 }
 </script>
 {% endblock %}

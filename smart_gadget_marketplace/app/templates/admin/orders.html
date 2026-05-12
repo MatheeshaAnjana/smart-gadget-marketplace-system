@@ -1,46 +1,152 @@
 {% extends 'layouts/admin_base.html' %}
 {% block title %}Orders — Admin{% endblock %}
 {% block content %}
-<div class="admin-page-header"><h2>Orders</h2><p>Manage and track all orders</p></div>
+<div class="admin-page-header">
+  <div>
+    <h2>Orders</h2>
+    <p>Manage and track all orders — {{ orders|length }} total in Oracle DB</p>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+         border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+         color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+         padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
 <div class="admin-card">
   <div class="table-toolbar">
-    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search orders..."/></div>
-    <select><option>All Status</option><option>Preparing</option><option>Shipped</option><option>Delivered</option></select>
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="orderSearch" placeholder="Search by customer or product..."
+             oninput="filterOrders()" title="Search orders"/>
+    </div>
+    <select id="deliveryFilter" onchange="filterOrders()" title="Filter by delivery status">
+      <option value="">All Status</option>
+      <option value="Preparing">Preparing</option>
+      <option value="Packed">Packed</option>
+      <option value="Shipped">Shipped</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Cancelled">Cancelled</option>
+    </select>
+    <select id="paymentFilter" onchange="filterOrders()" title="Filter by payment">
+      <option value="">All Payments</option>
+      <option value="Paid">Paid</option>
+      <option value="Pending">Pending</option>
+      <option value="Failed">Failed</option>
+    </select>
   </div>
+
   <table class="admin-table" id="ordersTable">
-    <thead><tr><th>Order ID</th><th>Customer</th><th>Products</th><th>Total</th><th>Payment</th><th>Delivery</th><th>Date</th><th>Actions</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Customer</th>
+        <th>Products</th>
+        <th>Total</th>
+        <th>Payment</th>
+        <th>Delivery Status</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
     <tbody>
       {% for order in orders %}
-      <tr>
-        <td><strong>{{ order.id }}</strong></td>
+      <tr data-customer="{{ order.user|lower }}"
+          data-products="{{ order.products|join(', ')|lower }}"
+          data-delivery="{{ order.delivery or '' }}"
+          data-payment="{{ order.payment or '' }}">
+        <td><strong>#{{ order.id }}</strong></td>
         <td>{{ order.user }}</td>
-        <td><small>{{ order.products|join(', ') }}</small></td>
-        <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
-        <td><span class="badge-{{ 'success' if order.payment == 'Paid' else 'warning' }}">{{ order.payment }}</span></td>
         <td>
-          <select class="status-select" onchange="updateOrderStatus(this, '{{ order.id }}')">
-            <option {% if order.delivery == 'Preparing' %}selected{% endif %}>Preparing</option>
-            <option {% if order.delivery == 'Packed' %}selected{% endif %}>Packed</option>
-            <option {% if order.delivery == 'Shipped' %}selected{% endif %}>Shipped</option>
-            <option {% if order.delivery == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
-            <option {% if order.delivery == 'Delivered' %}selected{% endif %}>Delivered</option>
-          </select>
+          <div style="max-width:180px;">
+            {% for pname in order.products %}
+              <span style="display:block;font-size:0.78rem;color:#374151;">{{ pname }}</span>
+            {% else %}
+              <span style="color:#9ca3af;font-size:0.78rem;">—</span>
+            {% endfor %}
+          </div>
         </td>
-        <td>{{ order.date }}</td>
+        <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
+        <td>
+          <span class="badge-{{ 'success' if order.payment == 'Paid' else ('warning' if order.payment == 'Pending' else 'danger') }}">
+            {{ order.payment or 'Pending' }}
+          </span>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px;">{{ order.payment_method or '' }}</div>
+        </td>
+        <td>
+          <!-- Status update form — POST to Flask → Oracle UPDATE -->
+          <form method="POST" action="{{ url_for('admin.update_order', order_id=order.id) }}"
+                style="display:flex;gap:4px;align-items:center;">
+            <select name="status" class="status-select"
+                    style="font-size:0.78rem;padding:4px 6px;border:1px solid #e2e8f0;border-radius:6px;"
+                    title="Update delivery status">
+              {% for s in ['Preparing','Packed','Shipped','Out for Delivery','Delivered','Cancelled'] %}
+                <option value="{{ s }}" {% if order.delivery == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn-icon edit" title="Save Status" style="padding:4px 8px;">
+              <i class="fas fa-save"></i>
+            </button>
+          </form>
+        </td>
+        <td style="white-space:nowrap;font-size:0.82rem;">{{ order.date }}</td>
         <td class="action-btns">
-          <button class="btn-icon edit" onclick="showToast('Order marked as delivered!','success')"><i class="fas fa-check"></i></button>
-          <button class="btn-icon delete" onclick="if(confirm('Cancel order?')) showToast('Order cancelled','success')"><i class="fas fa-times"></i></button>
+          <button class="btn-icon view"
+                  onclick="showToast('Order #{{ order.id }} — {{ order.user }}', 'info')"
+                  title="View Details">
+            <i class="fas fa-eye"></i>
+          </button>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="8" style="text-align:center;color:#94a3b8;padding:40px;">
+          No orders found in Oracle DB.
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+
+  <p style="text-align:right;color:#64748b;font-size:0.82rem;margin-top:8px;">
+    Showing <span id="visibleCount">{{ orders|length }}</span> orders
+  </p>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-function updateOrderStatus(select, orderId) {
-  showToast('Order ' + orderId + ' updated to: ' + select.value, 'success');
+function filterOrders() {
+  const search   = document.getElementById('orderSearch').value.toLowerCase();
+  const delivery = document.getElementById('deliveryFilter').value;
+  const payment  = document.getElementById('paymentFilter').value;
+  const rows     = document.querySelectorAll('#ordersTable tbody tr[data-customer]');
+  let visible    = 0;
+
+  rows.forEach(row => {
+    const customer  = row.dataset.customer  || '';
+    const products  = row.dataset.products  || '';
+    const rowDel    = row.dataset.delivery  || '';
+    const rowPay    = row.dataset.payment   || '';
+
+    const matchSearch   = !search   || customer.includes(search) || products.includes(search);
+    const matchDelivery = !delivery || rowDel === delivery;
+    const matchPayment  = !payment  || rowPay === payment;
+
+    const show = matchSearch && matchDelivery && matchPayment;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const counter = document.getElementById('visibleCount');
+  if (counter) counter.textContent = visible;
 }
 </script>
 {% endblock %}

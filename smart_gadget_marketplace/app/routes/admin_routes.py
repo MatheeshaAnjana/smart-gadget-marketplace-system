@@ -213,31 +213,40 @@ def delete_product(product_id):
     flash('Product removed.', 'info')
     return redirect(url_for('admin.products'))
 
-# ── Users ────────────────────────────────────────────────────
+# ── Users ─────────────────────────────────────────────────────
 @admin_bp.route('/users')
 def users():
     guard = admin_required()
     if guard: return guard
 
+    # Use simple query without table alias and without reserved word columns
+    # to avoid ORA-00923
     usr_raw = oracle_fetchall(
-        "SELECT c.customer_id AS uid, c.full_name AS uname, c.email AS uemail, "
-        "c.phone AS uphone, c.address AS uaddress, c.status AS ustatus, "
-        "TO_CHAR(c.created_at,'Mon YYYY') AS ujoined, "
-        "(SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.customer_id) AS ocount "
-        "FROM customers c ORDER BY c.created_at DESC"
+        "SELECT customer_id AS uid, full_name AS uname, "
+        "email AS uemail, phone AS uphone, "
+        "status AS ustatus, TO_CHAR(created_at,'Mon YYYY') AS ujoined "
+        "FROM customers ORDER BY created_at DESC"
     )
+
     all_users = []
     for u in usr_raw:
+        # Fetch order count in a separate query to avoid subquery alias issues
+        count_rows = oracle_fetchall(
+            "SELECT COUNT(*) AS cnt FROM orders WHERE customer_id = :1",
+            [u['uid']]
+        )
+        order_count = int(count_rows[0]['cnt']) if count_rows else 0
         all_users.append({
             'id':      u['uid'],
             'name':    u['uname'],
             'email':   u['uemail'],
             'phone':   u['uphone'],
-            'address': u['uaddress'],
+            'address': '—',
             'status':  u['ustatus'],
             'joined':  u['ujoined'],
-            'orders':  u['ocount'],
+            'orders':  order_count,
         })
+
     return render_template('admin/users.html', users=all_users)
 
 # ── Orders ───────────────────────────────────────────────────
@@ -332,6 +341,37 @@ def analytics():
     )
     stats = dict(stats_rows[0]) if stats_rows else {}
 
+    # Monthly revenue
+    monthly = oracle_fetchall(
+        "SELECT TO_CHAR(paid_at,'Mon') AS mth, SUM(amount) AS mtotal "
+        "FROM payments WHERE status = 'Paid' AND paid_at >= ADD_MONTHS(SYSDATE,-12) "
+        "GROUP BY TO_CHAR(paid_at,'Mon'), TO_CHAR(paid_at,'YYYY-MM') "
+        "ORDER BY TO_CHAR(paid_at,'YYYY-MM')"
+    )
+    stats['monthly_sales']  = [float(r['mtotal']) for r in monthly]
+    stats['monthly_labels'] = [r['mth'] for r in monthly]
+
+    # Category sales
+    cat_sales = oracle_fetchall(
+        "SELECT c.name AS catname, SUM(oi.quantity) AS sold "
+        "FROM order_items oi "
+        "JOIN products p ON oi.product_id = p.product_id "
+        "JOIN categories c ON p.category_id = c.category_id "
+        "GROUP BY c.name ORDER BY sold DESC"
+    )
+    stats['category_sales'] = {r['catname']: int(r['sold']) for r in cat_sales}
+
+    # Top products by views
+    top_products = oracle_fetchall(
+        "SELECT name AS pname, views AS pviews, image_url AS pimage "
+        "FROM products WHERE status = 'Active' ORDER BY views DESC FETCH FIRST 5 ROWS ONLY"
+    )
+    stats['top_products'] = [
+        {'name': p['pname'], 'views': p['pviews'], 'image': p['pimage']}
+        for p in top_products
+    ]
+
+    # MongoDB analytics
     mongo = get_mongo_db()
 
     peak_hours = list(mongo.activity_logs.aggregate([
@@ -347,16 +387,14 @@ def analytics():
     ]))
     stats['event_counts'] = {e['_id']: e['total'] for e in event_counts}
 
-    failed = list(mongo.failed_transactions.find({}, {"_id": 0}).sort("timestamp", -1).limit(10))
+    failed = list(mongo.failed_transactions.find(
+        {}, {"_id": 0}
+    ).sort("timestamp", -1).limit(10))
     stats['failed_transactions'] = failed
 
-    cat_sales = oracle_fetchall(
-        "SELECT c.name AS catname, SUM(oi.quantity) AS sold "
-        "FROM order_items oi "
-        "JOIN products p ON oi.product_id = p.product_id "
-        "JOIN categories c ON p.category_id = c.category_id "
-        "GROUP BY c.name ORDER BY sold DESC"
-    )
-    stats['category_sales'] = {r['catname']: int(r['sold']) for r in cat_sales}
+    recent_logins = list(mongo.activity_logs.find(
+        {"event_type": "login"}, {"_id": 0}
+    ).sort("timestamp", -1).limit(5))
+    stats['recent_logins'] = recent_logins
 
     return render_template('admin/analytics.html', stats=stats)

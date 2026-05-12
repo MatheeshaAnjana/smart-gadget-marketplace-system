@@ -1,72 +1,139 @@
 {% extends 'layouts/admin_base.html' %}
 {% block title %}Dashboard — Admin{% endblock %}
 {% block content %}
-<div class="admin-page-header"><h2>Dashboard</h2><p>Welcome back, Admin! Here's what's happening.</p></div>
-
-<!-- Stats Cards -->
-<div class="stats-cards">
-  <div class="stat-card blue"><div class="stat-icon-wrap"><i class="fas fa-box-open"></i></div><div><p>Total Products</p><h3>{{ stats.total_products }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 12% this month</span></div></div>
-  <div class="stat-card green"><div class="stat-icon-wrap"><i class="fas fa-users"></i></div><div><p>Total Users</p><h3>{{ stats.total_users }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 8% this month</span></div></div>
-  <div class="stat-card purple"><div class="stat-icon-wrap"><i class="fas fa-shopping-bag"></i></div><div><p>Total Orders</p><h3>{{ stats.total_orders }}</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 23% this month</span></div></div>
-  <div class="stat-card orange"><div class="stat-icon-wrap"><i class="fas fa-dollar-sign"></i></div><div><p>Revenue</p><h3>${{ "%.0f"|format(stats.revenue/1000) }}K</h3><span class="trend up"><i class="fas fa-arrow-up"></i> 15% this month</span></div></div>
+<div class="admin-page-header">
+  <h2>Dashboard</h2>
+  <p>Welcome back, <strong>{{ session.get('user_name', 'Admin') }}</strong>! Here's what's happening.</p>
 </div>
 
-<!-- Charts Row -->
+<!-- Stats Cards — real Oracle data -->
+<div class="stats-cards">
+  <div class="stat-card blue">
+    <div class="stat-icon-wrap"><i class="fas fa-box-open"></i></div>
+    <div>
+      <p>Total Products</p>
+      <h3>{{ stats.total_products }}</h3>
+      <span class="trend up"><i class="fas fa-arrow-up"></i> Active listings</span>
+    </div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon-wrap"><i class="fas fa-users"></i></div>
+    <div>
+      <p>Total Users</p>
+      <h3>{{ stats.total_users }}</h3>
+      <span class="trend up"><i class="fas fa-arrow-up"></i> Registered customers</span>
+    </div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-icon-wrap"><i class="fas fa-shopping-bag"></i></div>
+    <div>
+      <p>Total Orders</p>
+      <h3>{{ stats.total_orders }}</h3>
+      <span class="trend up"><i class="fas fa-arrow-up"></i> All time</span>
+    </div>
+  </div>
+  <div class="stat-card orange">
+    <div class="stat-icon-wrap"><i class="fas fa-dollar-sign"></i></div>
+    <div>
+      <p>Revenue</p>
+      <h3>${{ "%.2f"|format(stats.revenue) }}</h3>
+      <span class="trend up"><i class="fas fa-arrow-up"></i> Total paid</span>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row — data from Oracle -->
 <div class="charts-row">
   <div class="chart-card wide">
-    <div class="chart-header"><h4>Monthly Sales</h4><select><option>2024</option><option>2023</option></select></div>
+    <div class="chart-header">
+      <h4>Monthly Sales Revenue</h4>
+      <span style="font-size:0.8rem;color:#64748b;">Last 12 months from Oracle</span>
+    </div>
     <canvas id="salesChart" height="100"></canvas>
   </div>
   <div class="chart-card">
-    <div class="chart-header"><h4>Category Sales</h4></div>
+    <div class="chart-header"><h4>Sales by Category</h4></div>
     <canvas id="categoryChart" height="180"></canvas>
   </div>
 </div>
 
-<!-- Tables Row -->
+<!-- Tables Row — real Oracle data -->
 <div class="tables-row">
   <div class="table-card">
-    <div class="table-header"><h4>Recent Orders</h4><a href="{{ url_for('admin.orders') }}">View All</a></div>
+    <div class="table-header">
+      <h4>Recent Orders</h4>
+      <a href="{{ url_for('admin.orders') }}">View All</a>
+    </div>
     <table class="admin-table">
-      <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Status</th>
+        </tr>
+      </thead>
       <tbody>
         {% for order in orders %}
         <tr>
-          <td>{{ order.id }}</td>
+          <td><strong>#{{ order.id }}</strong></td>
           <td>{{ order.user }}</td>
-          <td>${{ "%.2f"|format(order.total) }}</td>
-          <td><span class="delivery-badge {{ order.delivery|lower|replace(' ', '-') }}">{{ order.delivery }}</span></td>
+          <td><strong>${{ "%.2f"|format(order.total) }}</strong></td>
+          <td>
+            <span class="delivery-badge {{ (order.delivery or 'preparing')|lower|replace(' ', '-') }}">
+              {{ order.delivery or 'Preparing' }}
+            </span>
+          </td>
         </tr>
+        {% else %}
+        <tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px;">No orders yet</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
   <div class="table-card">
-    <div class="table-header"><h4>Top Products</h4><a href="{{ url_for('admin.products') }}">View All</a></div>
+    <div class="table-header">
+      <h4>Top Products</h4>
+      <a href="{{ url_for('admin.products') }}">View All</a>
+    </div>
     <div class="top-products-list">
       {% for product in products %}
       <div class="top-product-item">
         <img src="{{ product.image }}" alt="{{ product.name }}"/>
-        <div><strong>{{ product.name }}</strong><span>${{ "%.2f"|format(product.price) }}</span></div>
-        <div class="stars small">{% for i in range(product.rating|int) %}<i class="fas fa-star"></i>{% endfor %}</div>
+        <div>
+          <strong>{{ product.name }}</strong>
+          <span>${{ "%.2f"|format(product.price) }}</span>
+        </div>
+        <div class="stars small">
+          {% for i in range(product.rating|int) %}
+            <i class="fas fa-star" style="color:#f59e0b;"></i>
+          {% endfor %}
+        </div>
       </div>
+      {% else %}
+      <p style="color:#94a3b8;text-align:center;padding:20px;">No products yet</p>
       {% endfor %}
     </div>
   </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
-const salesData = {{ stats.monthly_sales|tojson }};
-const catData = {{ stats.category_sales|tojson }};
+// Real data from Oracle via Flask
+const salesData   = {{ stats.monthly_sales | tojson }};
+const salesLabels = {{ stats.monthly_labels | tojson }};
+const catData     = {{ stats.category_sales | tojson }};
 
+// Monthly Sales Line Chart
 new Chart(document.getElementById('salesChart'), {
   type: 'line',
   data: {
-    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    labels: salesLabels.length ? salesLabels : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
     datasets: [{
-      label: 'Sales ($)',
-      data: salesData,
+      label: 'Revenue ($)',
+      data: salesData.length ? salesData : Array(12).fill(0),
       borderColor: '#0ea5e9',
       backgroundColor: 'rgba(14,165,233,0.1)',
       fill: true,
@@ -75,16 +142,33 @@ new Chart(document.getElementById('salesChart'), {
       pointRadius: 4,
     }]
   },
-  options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } } }
+  options: {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+      x: { grid: { display: false } }
+    }
+  }
 });
+
+// Category Doughnut Chart
+const catLabels = Object.keys(catData);
+const catValues = Object.values(catData);
 
 new Chart(document.getElementById('categoryChart'), {
   type: 'doughnut',
   data: {
-    labels: Object.keys(catData),
-    datasets: [{ data: Object.values(catData), backgroundColor: ['#0ea5e9','#22c55e','#f59e0b','#a855f7','#ef4444','#06b6d4','#f97316','#84cc16'] }]
+    labels: catLabels.length ? catLabels : ['No Data'],
+    datasets: [{
+      data: catValues.length ? catValues : [1],
+      backgroundColor: ['#0ea5e9','#22c55e','#f59e0b','#a855f7','#ef4444','#06b6d4','#f97316','#84cc16','#ec4899','#14b8a6']
+    }]
   },
-  options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+  }
 });
 </script>
 {% endblock %}

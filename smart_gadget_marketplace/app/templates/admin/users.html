@@ -1,31 +1,121 @@
 {% extends 'layouts/admin_base.html' %}
 {% block title %}Users — Admin{% endblock %}
 {% block content %}
-<div class="admin-page-header"><h2>Users</h2><p>Manage registered users</p></div>
+<div class="admin-page-header">
+  <div>
+    <h2>Users</h2>
+    <p>Manage registered customers — {{ users|length }} total in Oracle DB</p>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div style="background:{% if category=='success' %}#f0fdf4{% else %}#fef2f2{% endif %};
+         border:1px solid {% if category=='success' %}#86efac{% else %}#fca5a5{% endif %};
+         color:{% if category=='success' %}#16a34a{% else %}#dc2626{% endif %};
+         padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endwith %}
+
 <div class="admin-card">
   <div class="table-toolbar">
-    <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Search users..." oninput="filterTable(this.value, 'usersTable')"/></div>
-    <select><option>All Status</option><option>Active</option><option>Inactive</option></select>
+    <div class="search-box">
+      <i class="fas fa-search"></i>
+      <input type="text" id="userSearch" placeholder="Search by name or email..."
+             oninput="filterUsers()" title="Search users"/>
+    </div>
+    <select id="statusFilter" onchange="filterUsers()" title="Filter by status">
+      <option value="">All Status</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+      <option value="Banned">Banned</option>
+    </select>
   </div>
+
   <table class="admin-table" id="usersTable">
-    <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Orders</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Email</th>
+        <th>Phone</th>
+        <th>Address</th>
+        <th>Orders</th>
+        <th>Joined</th>
+        <th>Status</th>
+      </tr>
+    </thead>
     <tbody>
       {% for user in users %}
+      <tr data-name="{{ user.name|lower }}"
+          data-email="{{ user.email|lower }}"
+          data-status="{{ user.status }}">
+        <td>
+          <div class="user-cell">
+            <img src="https://ui-avatars.com/api/?name={{ user.name|urlencode }}&size=32&background=0ea5e9&color=fff"
+                 alt="{{ user.name }}" class="user-avatar-sm"
+                 style="width:32px;height:32px;border-radius:50%;"/>
+            <div>
+              <strong>{{ user.name }}</strong>
+              <div style="font-size:0.72rem;color:#64748b;">ID: {{ user.id }}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:0.85rem;">{{ user.email }}</td>
+        <td style="font-size:0.85rem;">{{ user.phone or '—' }}</td>
+        <td style="font-size:0.78rem;max-width:150px;color:#64748b;">
+          {{ user.address or '—' }}
+        </td>
+        <td>
+          <span class="badge-info">{{ user.orders }} order{{ 's' if user.orders != 1 else '' }}</span>
+        </td>
+        <td style="font-size:0.82rem;white-space:nowrap;">{{ user.joined }}</td>
+        <td>
+          <span class="badge-{{ 'success' if user.status == 'Active' else ('danger' if user.status == 'Banned' else 'warning') }}">
+            {{ user.status }}
+          </span>
+        </td>
+      </tr>
+      {% else %}
       <tr>
-        <td><div class="user-cell"><img src="{{ user.avatar }}" alt="{{ user.name }}" class="user-avatar-sm"/><strong>{{ user.name }}</strong></div></td>
-        <td>{{ user.email }}</td>
-        <td>{{ user.phone }}</td>
-        <td><span class="badge-info">{{ user.orders }} orders</span></td>
-        <td>{{ user.joined }}</td>
-        <td><span class="badge-{{ 'success' if user.status == 'Active' else 'warning' }}">{{ user.status }}</span></td>
-        <td class="action-btns">
-          <button class="btn-icon edit" onclick="showToast('User edit coming soon', 'info')"><i class="fas fa-edit"></i></button>
-          <button class="btn-icon delete" onclick="if(confirm('Delete user?')) showToast('User deleted','success')"><i class="fas fa-trash"></i></button>
-          <button class="btn-icon view" onclick="showToast('User activity: {{ user.orders }} orders', 'info')"><i class="fas fa-chart-bar"></i></button>
+        <td colspan="7" style="text-align:center;color:#94a3b8;padding:40px;">
+          No users found in Oracle DB.
         </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+
+  <p style="text-align:right;color:#64748b;font-size:0.82rem;margin-top:8px;">
+    Showing <span id="visibleCount">{{ users|length }}</span> of {{ users|length }} users
+  </p>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterUsers() {
+  const search = document.getElementById('userSearch').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const rows   = document.querySelectorAll('#usersTable tbody tr[data-name]');
+  let visible  = 0;
+
+  rows.forEach(row => {
+    const name      = row.dataset.name  || '';
+    const email     = row.dataset.email || '';
+    const rowStatus = row.dataset.status || '';
+
+    const matchSearch = !search || name.includes(search) || email.includes(search);
+    const matchStatus = !status || rowStatus === status;
+
+    const show = matchSearch && matchStatus;
+    row.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const counter = document.getElementById('visibleCount');
+  if (counter) counter.textContent = visible;
+}
+</script>
 {% endblock %}
