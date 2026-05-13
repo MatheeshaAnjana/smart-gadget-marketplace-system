@@ -1,9 +1,14 @@
 <nav class="navbar" id="navbar">
   <div class="nav-container">
     <a href="{{ url_for('user.home') }}" class="nav-logo">
-      <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-      <span>Smart<strong>Gadget</strong></span>
-    </a>
+  <div class="logo-mark">
+    <div class="logo-bar-tall"></div>
+    <div class="logo-bar-short"></div>
+  </div>
+  <div class="logo-text-wrap">
+    Smart<strong>Gadget</strong><div class="logo-superscript"></div>
+  </div>
+</a>
 
     <ul class="nav-links" id="navLinks">
       <li><a href="{{ url_for('user.home') }}" class="nav-link {% if request.endpoint == 'user.home' %}active{% endif %}"><i class="fas fa-home"></i> Home</a></li>

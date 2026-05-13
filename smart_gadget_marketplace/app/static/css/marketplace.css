@@ -1,13 +1,18 @@
 /* ===== NAVBAR ===== */
 .navbar {
   position: sticky; top: 0; z-index: 1000;
-  background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);
+  background: rgba(255,255,255,0.7); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--gray-100); height: var(--navbar-height);
   box-shadow: var(--shadow-sm);
 }
 .nav-container { max-width: 1280px; margin: 0 auto; padding: 0 1.5rem; height: 100%; display: flex; align-items: center; gap: 2rem; }
-.nav-logo { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--gray-900); flex-shrink: 0; }
-.nav-logo strong, .footer-logo strong { color: var(--primary); }
+.nav-logo { display: flex; flex-direction: row; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--gray-900); flex-shrink: 0; text-decoration: none; }
+.logo-mark { display: flex; flex-direction: row; align-items: flex-end; gap: 2px; }
+.logo-bar-tall { width: 13px; height: 32px; background: #0ea5e9; border-radius: 4px 0 0 4px; }
+.logo-bar-short { width: 8px; height: 20px; background: #38bdf8; border-radius: 0 3px 3px 0; margin-bottom: 3px; }
+.logo-text-wrap { font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; display: inline-flex; align-items: flex-start; gap: 1px; }
+.logo-text-wrap strong { color: #0ea5e9; font-weight: 800; }
+.logo-superscript { width: 5px; height: 5px; background: #0ea5e9; border-radius: 50%; display: inline-block; margin-top: 3px; margin-left: 1px; flex-shrink: 0; vertical-align: super; }
 .logo-icon { background: var(--primary); color: white; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
 .logo-icon.lg { width: 48px; height: 48px; font-size: 1.3rem; border-radius: 12px; }
 .nav-links { display: flex; align-items: center; gap: 0.25rem; flex: 1; }
@@ -28,6 +33,7 @@
 .hamburger { display: none; flex-direction: column; gap: 5px; padding: 4px; }
 .hamburger span { display: block; width: 22px; height: 2px; background: var(--gray-700); border-radius: 2px; transition: var(--transition); }
 .notif-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid white; }
+
 
 /* Notification Panel */
 .notification-panel { position: fixed; top: 74px; right: 1.5rem; width: 320px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); border: 1px solid var(--gray-100); z-index: 999; display: none; overflow: hidden; }
