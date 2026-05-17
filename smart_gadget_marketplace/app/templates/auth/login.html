@@ -4,18 +4,44 @@
 <div class="auth-container">
   <div class="auth-left">
     <div class="auth-left-content">
+
       <div class="auth-logo">
-        <div class="logo-icon lg"><i class="fas fa-bolt"></i></div>
-        <h1>Smart<strong>Gadget</strong></h1>
+        <div class="logo-mark">
+          <div class="logo-bar-tall"></div>
+          <div class="logo-bar-short"></div>
+        </div>
+        <div class="logo-text-wrap" style="color:white;">
+          Smart<strong style="color:rgba(255,255,255,0.75);">Gadget</strong>
+          <div class="logo-superscript" style="background:rgba(255,255,255,0.8);box-shadow:none;"></div>
+        </div>
       </div>
+
       <h2>Your Tech Universe Awaits</h2>
       <p>Discover the latest gadgets, smartwatches, laptops, and more at unbeatable prices.</p>
+
       <div class="auth-features">
         <div class="auth-feature"><i class="fas fa-shipping-fast"></i><span>Free Express Delivery</span></div>
         <div class="auth-feature"><i class="fas fa-shield-alt"></i><span>Secure Payments</span></div>
         <div class="auth-feature"><i class="fas fa-undo-alt"></i><span>Easy 30-Day Returns</span></div>
         <div class="auth-feature"><i class="fas fa-headset"></i><span>24/7 Support</span></div>
       </div>
+
+      <!-- Floating review pill -->
+      <div style="margin-top:1.75rem;display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.13);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.28);border-radius:100px;padding:0.6rem 1rem;box-shadow:inset 0 1px 0 rgba(255,255,255,0.25);">
+        <div style="display:flex;margin-right:0.1rem;">
+          <img src="https://ui-avatars.com/api/?name=A&size=28&background=38bdf8&color=fff" style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);margin-right:-8px;" alt=""/>
+          <img src="https://ui-avatars.com/api/?name=B&size=28&background=0ea5e9&color=fff" style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);margin-right:-8px;" alt=""/>
+          <img src="https://ui-avatars.com/api/?name=C&size=28&background=0284c7&color=fff" style="width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,0.6);" alt=""/>
+        </div>
+        <div>
+          <div style="font-size:0.78rem;font-weight:700;color:white;">Trusted by thousands</div>
+          <div style="font-size:0.7rem;color:rgba(255,255,255,0.65);">Join our growing community</div>
+        </div>
+        <div style="margin-left:auto;background:rgba(255,255,255,0.18);border-radius:100px;padding:0.25rem 0.65rem;font-size:0.72rem;font-weight:700;color:white;border:1px solid rgba(255,255,255,0.3);">
+          ★ 4.9
+        </div>
+      </div>
+
     </div>
     <div class="auth-bg-shapes">
       <div class="shape s1"></div>
@@ -29,14 +55,12 @@
       <h2>Welcome Back</h2>
       <p class="auth-subtitle">Sign in to your account</p>
 
-      <!-- Show error from Flask -->
       {% if error %}
         <div class="alert alert-danger" style="background:#fee;border:1px solid #fcc;color:#c00;padding:10px 14px;border-radius:8px;margin-bottom:16px;">
           <i class="fas fa-exclamation-circle"></i> {{ error }}
         </div>
       {% endif %}
 
-      <!-- Show flash messages (e.g. "Account created!") -->
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
           <div style="background:#efe;border:1px solid #cfc;color:#060;padding:10px 14px;border-radius:8px;margin-bottom:16px;">

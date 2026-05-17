@@ -2,8 +2,13 @@
   <div class="footer-container">
     <div class="footer-brand">
       <a href="{{ url_for('user.home') }}" class="footer-logo">
-        <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-        <span>Smart<strong>Gadget</strong></span>
+        <div class="logo-mark">
+          <div class="logo-bar-tall"></div>
+          <div class="logo-bar-short"></div>
+        </div>
+        <div class="logo-text-wrap" style="color:white;">
+          Smart<strong>Gadget</strong><div class="logo-superscript"></div>
+        </div>
       </a>
       <p>Your one-stop destination for the latest and greatest tech gadgets. Quality products, fast delivery, exceptional service.</p>
       <div class="footer-socials">
@@ -46,7 +51,6 @@
         <button onclick="subscribeNewsletter()" type="button">Subscribe</button>
       </div>
 
-      <!-- Logged in user info -->
       {% if session.get('user_name') %}
       <div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.1);border-radius:8px;font-size:0.82rem;">
         <i class="fas fa-user-circle"></i>

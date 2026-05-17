@@ -1,13 +1,19 @@
 <aside class="admin-sidebar" id="adminSidebar">
   <div class="sidebar-header">
-    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-    <span>Smart<strong>Gadget</strong></span>
+    <a href="{{ url_for('user.home') }}" class="nav-logo" style="text-decoration:none;">
+      <div class="logo-mark">
+        <div class="logo-bar-tall"></div>
+        <div class="logo-bar-short"></div>
+      </div>
+      <div class="logo-text-wrap" style="color:white;">
+        Smart<strong>Gadget</strong><div class="logo-superscript"></div>
+      </div>
+    </a>
     <button class="sidebar-close" id="sidebarClose" title="Close Sidebar">
       <i class="fas fa-times"></i>
     </button>
   </div>
 
-  <!-- Admin user info from session -->
   <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:8px;">
     <div style="display:flex;align-items:center;gap:10px;">
       <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'Admin')|urlencode }}&size=36&background=ffffff&color=0ea5e9"
