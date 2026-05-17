@@ -1,14 +1,14 @@
 <nav class="navbar" id="navbar">
   <div class="nav-container">
     <a href="{{ url_for('user.home') }}" class="nav-logo">
-  <div class="logo-mark">
-    <div class="logo-bar-tall"></div>
-    <div class="logo-bar-short"></div>
-  </div>
-  <div class="logo-text-wrap">
-    Smart<strong>Gadget</strong><div class="logo-superscript"></div>
-  </div>
-</a>
+      <div class="logo-mark">
+        <div class="logo-bar-tall"></div>
+        <div class="logo-bar-short"></div>
+      </div>
+      <div class="logo-text-wrap">
+        Smart<strong>Gadget</strong><div class="logo-superscript"></div>
+      </div>
+    </a>
 
     <ul class="nav-links" id="navLinks">
       <li><a href="{{ url_for('user.home') }}" class="nav-link {% if request.endpoint == 'user.home' %}active{% endif %}"><i class="fas fa-home"></i> Home</a></li>
@@ -19,7 +19,7 @@
     </ul>
 
     <div class="nav-actions">
-      <!-- Search bar — submits to products page -->
+      <!-- Search bar -->
       <form action="{{ url_for('user.products') }}" method="GET" class="nav-search" id="navSearchForm">
         <input type="text" name="q" id="navSearch"
                placeholder="Search gadgets..." autocomplete="off"
@@ -40,7 +40,7 @@
         <span class="badge" id="cartCount">0</span>
       </a>
 
-      <!-- Profile — shows real user name from session -->
+      <!-- Profile -->
       <a href="{{ url_for('user.profile') }}" class="profile-btn" title="{{ session.get('user_name', 'Profile') }}">
         <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'U')|urlencode }}&size=36&background=0ea5e9&color=fff"
              alt="{{ session.get('user_name', 'User') }}"/>
@@ -77,8 +77,22 @@
         <div><p>New products added to your category</p><span>3 hr ago</span></div>
       </div>
     </div>
-    <div style="padding:10px;text-align:center;border-top:1px solid #e2e8f0;">
-      <a href="{{ url_for('user.orders') }}" style="font-size:0.82rem;color:#0ea5e9;">View all orders</a>
+    <div style="padding:10px;text-align:center;border-top:1px solid rgba(14,165,233,0.1);">
+      <a href="{{ url_for('user.orders') }}" style="font-size:0.82rem;color:#0ea5e9;font-weight:600;">View all orders</a>
     </div>
   </div>
 </nav>
+
+<script>
+/* Dynamic Island scroll effect */
+(function () {
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', function () {
+    if (window.scrollY > 20) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  }, { passive: true });
+})();
+</script>

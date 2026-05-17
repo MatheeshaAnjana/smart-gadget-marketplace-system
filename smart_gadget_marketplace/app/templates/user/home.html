@@ -1,51 +1,271 @@
 {% extends 'layouts/base.html' %}
 {% block title %}Home — SmartGadget Marketplace{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== Hero — full-bleed image background, extends behind fixed navbar ===== */
+.hero-section {
+  position: relative;
+  overflow: hidden;
+  height: 100vh;
+  min-height: 640px;
+  max-height: 780px;
+  /* No margin-top — hero starts from page top, slides under the fixed navbar */
+}
+
+/* The slider track */
+.hero-slider {
+  display: flex;
+  height: 100%;
+  transition: none;
+}
+
+/* Each slide fills the full section */
+.slide {
+  position: relative;
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  /* Push content down so it clears the floating navbar pill (~70px + 12px padding) */
+  padding-top: var(--navbar-height);
+}
+
+/* Full-bleed background image */
+.slide-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+  transform: scale(1.04);
+  transition: transform 8s ease;
+  animation: heroZoom 8s ease-in-out infinite alternate;
+}
+@keyframes heroZoom {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.07); }
+}
+
+/* Dark gradient overlay so text is always readable */
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Floating glass orbs inside hero */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2;
+  filter: blur(50px);
+}
+.hero-orb-1 {
+  width: 400px; height: 400px;
+  top: -100px; right: 10%;
+  background: rgba(255,255,255,0.07);
+  animation: heroOrbFloat 9s ease-in-out infinite;
+}
+.hero-orb-2 {
+  width: 250px; height: 250px;
+  bottom: -80px; left: 20%;
+  background: rgba(56,189,248,0.12);
+  animation: heroOrbFloat 13s ease-in-out infinite reverse;
+}
+@keyframes heroOrbFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-28px) scale(1.06); }
+}
+
+/* Glass content card — floats over the image */
+.slide-glass-card {
+  background: rgba(10, 20, 40, 0.38);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 24px;
+  padding: 2.5rem 2.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(255,255,255,0.08),
+    0 12px 48px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(255,255,255,0.06);
+  max-width: 500px;
+  z-index: 3;
+  position: relative;
+  margin-left: 6%;
+  /* Entrance animation */
+  animation: cardSlideIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes cardSlideIn {
+  from { opacity: 0; transform: translateX(-30px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* All text inside card is white on the full-bg layout */
+.slide-glass-card h1,
+.slide-glass-card .slide-content h1 { color: #fff !important; text-shadow: 0 2px 16px rgba(0,0,0,0.5); }
+.slide-glass-card p,
+.slide-glass-card .slide-content p  { color: rgba(255,255,255,0.88) !important; text-shadow: 0 1px 6px rgba(0,0,0,0.3); }
+.slide-glass-card .slide-price span { color: rgba(255,255,255,0.7) !important; }
+.slide-glass-card .slide-price strong { color: #fff !important; font-size: 2rem; text-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+
+/* Override marketplace.css which sets slide h1 to gray-900 for non-light slides */
+.hero-section .slide h1 { color: #fff !important; }
+.hero-section .slide p  { color: rgba(255,255,255,0.88) !important; }
+.stat-card-glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem 2rem;
+  transition: all 0.3s ease;
+}
+.stat-card-glass:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(14,165,233,0.2);
+}
+
+/* ===== Section label pill ===== */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(14,165,233,0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(14,165,233,0.2);
+  color: var(--primary);
+  padding: 0.3rem 0.9rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.6rem;
+}
+
+/* ===== Product card entrance animation ===== */
+@keyframes cardReveal {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+#featuredGrid .product-card { animation: cardReveal 0.5s ease both; }
+#featuredGrid .product-card:nth-child(1) { animation-delay: 0.05s; }
+#featuredGrid .product-card:nth-child(2) { animation-delay: 0.10s; }
+#featuredGrid .product-card:nth-child(3) { animation-delay: 0.15s; }
+#featuredGrid .product-card:nth-child(4) { animation-delay: 0.20s; }
+#featuredGrid .product-card:nth-child(5) { animation-delay: 0.25s; }
+#featuredGrid .product-card:nth-child(6) { animation-delay: 0.30s; }
+#featuredGrid .product-card:nth-child(7) { animation-delay: 0.35s; }
+#featuredGrid .product-card:nth-child(8) { animation-delay: 0.40s; }
+
+/* ===== Mobile hero adjustments ===== */
+@media (max-width: 768px) {
+  .hero-section { height: 100svh; min-height: 520px; max-height: 680px; }
+  .slide { flex-direction: column; align-items: flex-start; justify-content: flex-end; padding-bottom: 5rem; padding-top: calc(var(--navbar-height) + 1rem); }
+  .slide-glass-card { margin-left: 1rem; margin-right: 1rem; max-width: calc(100% - 2rem); padding: 1.75rem 1.5rem; }
+  .slide-bg-img { object-position: 65% center; }
+}
+@media (max-width: 480px) {
+  .hero-section { min-height: 480px; }
+  .slide-glass-card { border-radius: 16px; padding: 1.5rem 1.25rem; }
+  .slide-glass-card h1,
+  .slide-glass-card .slide-content h1 { font-size: 1.6rem !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- Hero Slider -->
 <section class="hero-section">
+  <!-- Ambient floating orbs -->
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+
   <div class="hero-slider" id="heroSlider">
-    <div class="slide active" style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%)">
-      <div class="slide-content">
-        <span class="slide-tag">NEW ARRIVAL</span>
+
+    <!-- Slide 1: Sony Headphones -->
+    <div class="slide active">
+      <!-- Full-bleed background image -->
+      <img class="slide-bg-img"
+           src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1400&q=85"
+           alt="Sony Headphones background"/>
+      <!-- Gradient overlay: dark left → transparent right for text legibility -->
+      <div class="slide-overlay" style="background: linear-gradient(100deg, rgba(2,50,90,0.82) 0%, rgba(2,100,160,0.55) 45%, rgba(14,165,233,0.15) 75%, transparent 100%);"></div>
+      <!-- Glass content card -->
+      <div class="slide-glass-card slide-content">
+        <span class="slide-tag"><i class="fas fa-bolt" style="font-size:0.7rem"></i> NEW ARRIVAL</span>
         <h1>Sony WH-1000XM5</h1>
-        <p>Industry-leading noise cancellation. 30-hour battery.</p>
+        <p>Industry-leading noise cancellation. 30-hour battery life.</p>
         <div class="slide-price"><span>From</span><strong>$349.99</strong></div>
-        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">
+          Shop Now <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
-      <div class="slide-image"><img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500" alt="Sony Headphones"/></div>
     </div>
-    <div class="slide" style="background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)">
-      <div class="slide-content light">
-        <span class="slide-tag">BEST SELLER</span>
+
+    <!-- Slide 2: iPad Pro -->
+    <div class="slide">
+      <img class="slide-bg-img"
+           src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=1400&q=85"
+           alt="iPad Pro background"/>
+      <div class="slide-overlay" style="background: linear-gradient(100deg, rgba(10,15,30,0.85) 0%, rgba(30,41,59,0.6) 45%, rgba(71,85,105,0.2) 75%, transparent 100%);"></div>
+      <div class="slide-glass-card slide-content">
+        <span class="slide-tag"><i class="fas fa-fire" style="font-size:0.7rem"></i> BEST SELLER</span>
         <h1>iPad Pro M2</h1>
-        <p>The ultimate iPad experience. Liquid Retina XDR.</p>
+        <p>The ultimate iPad experience. Liquid Retina XDR display.</p>
         <div class="slide-price"><span>From</span><strong>$1,099.00</strong></div>
-        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">
+          Shop Now <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
-      <div class="slide-image"><img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500" alt="iPad Pro"/></div>
     </div>
-    <div class="slide" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #4c1d95 100%)">
-      <div class="slide-content light">
-        <span class="slide-tag">HOT DEAL</span>
+
+    <!-- Slide 3: DJI Drone -->
+    <div class="slide">
+      <img class="slide-bg-img"
+           src="https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=1400&q=85"
+           alt="DJI Drone background"/>
+      <div class="slide-overlay" style="background: linear-gradient(100deg, rgba(40,10,80,0.88) 0%, rgba(91,33,182,0.55) 45%, rgba(124,58,237,0.18) 75%, transparent 100%);"></div>
+      <div class="slide-glass-card slide-content">
+        <span class="slide-tag"><i class="fas fa-tag" style="font-size:0.7rem"></i> HOT DEAL</span>
         <h1>DJI Mini 4 Pro</h1>
         <p>4K/60fps video. Omnidirectional obstacle sensing.</p>
         <div class="slide-price"><span>From</span><strong>$759.00</strong></div>
-        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">
+          Shop Now <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
-      <div class="slide-image"><img src="https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=500" alt="DJI Drone"/></div>
     </div>
-    <div class="slide" style="background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%)">
-      <div class="slide-content light">
-        <span class="slide-tag">GAMING</span>
+
+    <!-- Slide 4: ASUS ROG Gaming Laptop -->
+    <div class="slide">
+      <img class="slide-bg-img"
+           src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=1400&q=85"
+           alt="Gaming Laptop background"/>
+      <div class="slide-overlay" style="background: linear-gradient(100deg, rgba(5,30,20,0.88) 0%, rgba(4,120,87,0.55) 45%, rgba(5,150,105,0.18) 75%, transparent 100%);"></div>
+      <div class="slide-glass-card slide-content">
+        <span class="slide-tag"><i class="fas fa-gamepad" style="font-size:0.7rem"></i> GAMING</span>
         <h1>ASUS ROG Laptop</h1>
         <p>RTX 4070, 165Hz display, Ryzen 9 power.</p>
         <div class="slide-price"><span>From</span><strong>$1,499.00</strong></div>
-        <a href="{{ url_for('user.products') }}" class="slide-btn">Shop Now <i class="fas fa-arrow-right"></i></a>
+        <a href="{{ url_for('user.products') }}" class="slide-btn">
+          Shop Now <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
-      <div class="slide-image"><img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500" alt="Gaming Laptop"/></div>
     </div>
+
   </div>
+
   <div class="slider-controls">
     <button class="slider-prev" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
     <div class="slider-dots" id="sliderDots"></div>
@@ -57,15 +277,33 @@
 <section class="categories-section">
   <div class="container">
     <div class="category-pills">
-      <button class="pill active" onclick="filterHomeProducts('All')">All</button>
-      <button class="pill" onclick="filterHomeProducts('Audio')"><i class="fas fa-headphones"></i> Audio</button>
-      <button class="pill" onclick="filterHomeProducts('Laptops')"><i class="fas fa-laptop"></i> Laptops</button>
-      <button class="pill" onclick="filterHomeProducts('Wearables')"><i class="fas fa-watch"></i> Wearables</button>
-      <button class="pill" onclick="filterHomeProducts('Gaming')"><i class="fas fa-gamepad"></i> Gaming</button>
-      <button class="pill" onclick="filterHomeProducts('Drones')"><i class="fas fa-helicopter"></i> Drones</button>
-      <button class="pill" onclick="filterHomeProducts('Cameras')"><i class="fas fa-camera"></i> Cameras</button>
-      <button class="pill" onclick="filterHomeProducts('Smart Home')"><i class="fas fa-home"></i> Smart Home</button>
-      <button class="pill" onclick="filterHomeProducts('Phones')"><i class="fas fa-mobile-alt"></i> Phones</button>
+      <button class="pill active" onclick="filterHomeProducts('All')">
+        <i class="fas fa-border-all"></i> All
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Audio')">
+        <i class="fas fa-headphones"></i> Audio
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Laptops')">
+        <i class="fas fa-laptop"></i> Laptops
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Wearables')">
+        <i class="fas fa-watch"></i> Wearables
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Gaming')">
+        <i class="fas fa-gamepad"></i> Gaming
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Drones')">
+        <i class="fas fa-helicopter"></i> Drones
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Cameras')">
+        <i class="fas fa-camera"></i> Cameras
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Smart Home')">
+        <i class="fas fa-home"></i> Smart Home
+      </button>
+      <button class="pill" onclick="filterHomeProducts('Phones')">
+        <i class="fas fa-mobile-alt"></i> Phones
+      </button>
     </div>
   </div>
 </section>
@@ -75,10 +313,13 @@
   <div class="container">
     <div class="section-header">
       <div>
+        <div class="section-label"><i class="fas fa-star"></i> Handpicked</div>
         <h2>Featured Products</h2>
-        <p>Handpicked top gadgets for you</p>
+        <p>Top gadgets curated just for you</p>
       </div>
-      <a href="{{ url_for('user.products') }}" class="see-all-btn">See All Products <i class="fas fa-arrow-right"></i></a>
+      <a href="{{ url_for('user.products') }}" class="see-all-btn">
+        See All Products <i class="fas fa-arrow-right"></i>
+      </a>
     </div>
     <div class="products-grid" id="featuredGrid">
       {% for product in products %}
@@ -87,7 +328,9 @@
         <div class="product-image-wrap">
           <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/>
           <div class="product-overlay">
-            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn"><i class="fas fa-eye"></i> Quick View</a>
+            <a href="{{ url_for('user.product_details', product_id=product.id) }}" class="overlay-btn">
+              <i class="fas fa-eye"></i> Quick View
+            </a>
           </div>
         </div>
         <div class="product-info">
@@ -104,9 +347,12 @@
           <div class="product-footer">
             <div class="product-price">
               <span class="price">${{ "%.2f"|format(product.price) }}</span>
-              {% if product.original_price %}<span class="original">${{ "%.2f"|format(product.original_price) }}</span>{% endif %}
+              {% if product.original_price %}
+                <span class="original">${{ "%.2f"|format(product.original_price) }}</span>
+              {% endif %}
             </div>
-            <button class="add-cart-btn" onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
+            <button class="add-cart-btn"
+              onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.image }}')">
               <i class="fas fa-cart-plus"></i>
             </button>
           </div>
@@ -115,7 +361,9 @@
       {% endfor %}
     </div>
     <div class="center-btn">
-      <a href="{{ url_for('user.products') }}" class="btn-primary"><i class="fas fa-th-large"></i> Browse All Products</a>
+      <a href="{{ url_for('user.products') }}" class="btn-primary">
+        <i class="fas fa-th-large"></i> Browse All Products
+      </a>
     </div>
   </div>
 </section>
@@ -124,10 +372,22 @@
 <section class="stats-banner">
   <div class="container">
     <div class="stats-grid">
-      <div class="stat-item"><div class="stat-icon"><i class="fas fa-box-open"></i></div><div><h3>10,000+</h3><p>Products Available</p></div></div>
-      <div class="stat-item"><div class="stat-icon"><i class="fas fa-users"></i></div><div><h3>50,000+</h3><p>Happy Customers</p></div></div>
-      <div class="stat-item"><div class="stat-icon"><i class="fas fa-shipping-fast"></i></div><div><h3>Free Shipping</h3><p>On orders over $50</p></div></div>
-      <div class="stat-item"><div class="stat-icon"><i class="fas fa-shield-alt"></i></div><div><h3>Secure</h3><p>100% Safe Payments</p></div></div>
+      <div class="stat-item stat-card-glass">
+        <div class="stat-icon"><i class="fas fa-box-open"></i></div>
+        <div><h3>10,000+</h3><p>Products Available</p></div>
+      </div>
+      <div class="stat-item stat-card-glass">
+        <div class="stat-icon"><i class="fas fa-users"></i></div>
+        <div><h3>50,000+</h3><p>Happy Customers</p></div>
+      </div>
+      <div class="stat-item stat-card-glass">
+        <div class="stat-icon"><i class="fas fa-shipping-fast"></i></div>
+        <div><h3>Free Shipping</h3><p>On orders over $50</p></div>
+      </div>
+      <div class="stat-item stat-card-glass">
+        <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+        <div><h3>Secure</h3><p>100% Safe Payments</p></div>
+      </div>
     </div>
   </div>
 </section>
@@ -136,8 +396,9 @@
 <section class="reviews-section">
   <div class="container">
     <div class="section-header center">
+      <div class="section-label"><i class="fas fa-comment-dots"></i> Testimonials</div>
       <h2>What Our Customers Say</h2>
-      <p>Join thousands of satisfied customers</p>
+      <p>Join thousands of satisfied customers around the world</p>
     </div>
     <div class="reviews-grid">
       {% for review in reviews %}
@@ -150,7 +411,7 @@
           </div>
           <div class="review-stars">
             {% for i in range(review.rating|int) %}
-              <i class="fas fa-star"></i>
+              <i class="fas fa-star" style="color:#f59e0b;font-size:0.78rem;filter:drop-shadow(0 0 3px rgba(245,158,11,0.4))"></i>
             {% endfor %}
           </div>
         </div>
@@ -167,11 +428,16 @@
   <div class="container">
     <div class="newsletter-card">
       <div class="newsletter-content">
+        <div class="section-label" style="background:rgba(255,255,255,0.2);border-color:rgba(255,255,255,0.3);color:white;">
+          <i class="fas fa-envelope"></i> Newsletter
+        </div>
         <h2>Get Exclusive Deals in Your Inbox</h2>
         <p>Subscribe to get notified about new arrivals, flash sales, and exclusive offers.</p>
         <div class="newsletter-form">
           <input type="email" id="newsletterEmail" placeholder="Enter your email address"/>
-          <button onclick="subscribeNewsletter()"><i class="fas fa-paper-plane"></i> Subscribe</button>
+          <button onclick="subscribeNewsletter()">
+            <i class="fas fa-paper-plane"></i> Subscribe
+          </button>
         </div>
         <p class="newsletter-note"><i class="fas fa-lock"></i> We respect your privacy. No spam, ever.</p>
       </div>
@@ -181,5 +447,8 @@
     </div>
   </div>
 </section>
+
 {% endblock %}
-{% block extra_js %}<script src="{{ url_for('static', filename='js/products.js') }}"></script>{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/products.js') }}"></script>
+{% endblock %}
