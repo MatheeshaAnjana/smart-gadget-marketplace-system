@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/marketplace.css') }}"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}"/>
   {% block extra_css %}{% endblock %}
 
   <style>
@@ -57,6 +58,11 @@
       padding-top: 0;
     }
   </style>
+  <script>
+    /* Auth state — set server-side so JS can read it without an extra request */
+    window.SG_USER_LOGGED_IN = {{ 'true' if session.get('user_id') else 'false' }};
+    window.SG_LOGIN_URL = "{{ url_for('auth.login') }}";
+  </script>
 </head>
 <body>
   {% include 'includes/navbar.html' %}

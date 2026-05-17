@@ -1,5 +1,7 @@
 <nav class="navbar" id="navbar">
   <div class="nav-container">
+
+    {# ── Logo ── #}
     <a href="{{ url_for('user.home') }}" class="nav-logo">
       <div class="logo-mark">
         <div class="logo-bar-tall"></div>
@@ -10,17 +12,50 @@
       </div>
     </a>
 
+    {# ── Nav Links — always visible ── #}
     <ul class="nav-links" id="navLinks">
-      <li><a href="{{ url_for('user.home') }}" class="nav-link {% if request.endpoint == 'user.home' %}active{% endif %}"><i class="fas fa-home"></i> Home</a></li>
-      <li><a href="{{ url_for('user.products') }}" class="nav-link {% if request.endpoint == 'user.products' %}active{% endif %}"><i class="fas fa-th-large"></i> Products</a></li>
-      <li><a href="{{ url_for('user.wishlist') }}" class="nav-link {% if request.endpoint == 'user.wishlist' %}active{% endif %}"><i class="fas fa-heart"></i> Wishlist</a></li>
-      <li><a href="{{ url_for('user.orders') }}" class="nav-link {% if request.endpoint == 'user.orders' %}active{% endif %}"><i class="fas fa-box"></i> Orders</a></li>
-      <li><a href="{{ url_for('user.ratings') }}" class="nav-link {% if request.endpoint == 'user.ratings' %}active{% endif %}"><i class="fas fa-star"></i> Ratings</a></li>
+      <li>
+        <a href="{{ url_for('user.home') }}"
+           class="nav-link {% if request.endpoint == 'user.home' %}active{% endif %}">
+          <i class="fas fa-home"></i> Home
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('user.products') }}"
+           class="nav-link {% if request.endpoint == 'user.products' %}active{% endif %}">
+          <i class="fas fa-th-large"></i> Products
+        </a>
+      </li>
+
+      {# These links only make sense when logged in #}
+      {% if session.get('user_id') %}
+      <li>
+        <a href="{{ url_for('user.wishlist') }}"
+           class="nav-link {% if request.endpoint == 'user.wishlist' %}active{% endif %}">
+          <i class="fas fa-heart"></i> Wishlist
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('user.orders') }}"
+           class="nav-link {% if request.endpoint == 'user.orders' %}active{% endif %}">
+          <i class="fas fa-box"></i> Orders
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('user.ratings') }}"
+           class="nav-link {% if request.endpoint == 'user.ratings' %}active{% endif %}">
+          <i class="fas fa-star"></i> Ratings
+        </a>
+      </li>
+      {% endif %}
     </ul>
 
+    {# ── Right-side Actions ── #}
     <div class="nav-actions">
-      <!-- Search bar -->
-      <form action="{{ url_for('user.products') }}" method="GET" class="nav-search" id="navSearchForm">
+
+      {# Search — always visible #}
+      <form action="{{ url_for('user.products') }}" method="GET"
+            class="nav-search" id="navSearchForm">
         <input type="text" name="q" id="navSearch"
                placeholder="Search gadgets..." autocomplete="off"
                value="{{ request.args.get('q', '') }}"/>
@@ -28,28 +63,55 @@
         <div class="search-results" id="searchResults"></div>
       </form>
 
-      <!-- Notifications -->
-      <button class="notif-btn" onclick="toggleNotifications()" title="Notifications">
-        <i class="fas fa-bell"></i>
-        <span class="badge" id="notifBadge">3</span>
-      </button>
+      {% if session.get('user_id') %}
+      {# ── LOGGED-IN actions ── #}
 
-      <!-- Cart -->
-      <a href="{{ url_for('user.cart') }}" class="cart-btn" title="Shopping Cart">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="badge" id="cartCount">0</span>
-      </a>
+        {# Notifications #}
+        <button class="notif-btn" onclick="toggleNotifications()" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span class="badge" id="notifBadge">3</span>
+        </button>
 
-      <!-- Profile -->
-      <a href="{{ url_for('user.profile') }}" class="profile-btn" title="{{ session.get('user_name', 'Profile') }}">
-        <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'U')|urlencode }}&size=36&background=0ea5e9&color=fff"
-             alt="{{ session.get('user_name', 'User') }}"/>
-      </a>
+        {# Cart #}
+        <a href="{{ url_for('user.cart') }}" class="cart-btn" title="Shopping Cart">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="badge" id="cartCount">0</span>
+        </a>
 
-      <!-- Logout -->
-      <a href="{{ url_for('auth.logout') }}" class="nav-logout" title="Logout">
-        <i class="fas fa-sign-out-alt"></i>
-      </a>
+        {# Profile avatar #}
+        <a href="{{ url_for('user.profile') }}" class="profile-btn"
+           title="{{ session.get('user_name', 'Profile') }}">
+          <img src="https://ui-avatars.com/api/?name={{ session.get('user_name', 'U')|urlencode }}&size=36&background=0ea5e9&color=fff"
+               alt="{{ session.get('user_name', 'User') }}"/>
+        </a>
+
+        {# Logout #}
+        <a href="{{ url_for('auth.logout') }}" class="nav-logout" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+
+      {% else %}
+      {# ── ANONYMOUS actions ── #}
+
+        {# Cart count still shows (local storage) but clicking goes to login #}
+        <a href="{{ url_for('auth.login') }}" class="cart-btn" title="Cart — login to checkout">
+          <i class="fas fa-shopping-cart"></i>
+          <span class="badge" id="cartCount">0</span>
+        </a>
+
+        {# Login button #}
+        <a href="{{ url_for('auth.login') }}" class="nav-btn-login" title="Login">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login</span>
+        </a>
+
+        {# Register button #}
+        <a href="{{ url_for('auth.register') }}" class="nav-btn-register" title="Register">
+          <i class="fas fa-user-plus"></i>
+          <span>Sign Up</span>
+        </a>
+
+      {% endif %}
     </div>
 
     <button class="hamburger" id="hamburger" title="Menu">
@@ -57,7 +119,8 @@
     </button>
   </div>
 
-  <!-- Notification dropdown -->
+  {# ── Notification dropdown (logged-in only) ── #}
+  {% if session.get('user_id') %}
   <div class="notification-panel" id="notifPanel">
     <div class="notif-header">
       <h4>Notifications</h4>
@@ -78,9 +141,11 @@
       </div>
     </div>
     <div style="padding:10px;text-align:center;border-top:1px solid rgba(14,165,233,0.1);">
-      <a href="{{ url_for('user.orders') }}" style="font-size:0.82rem;color:#0ea5e9;font-weight:600;">View all orders</a>
+      <a href="{{ url_for('user.orders') }}"
+         style="font-size:0.82rem;color:#0ea5e9;font-weight:600;">View all orders</a>
     </div>
   </div>
+  {% endif %}
 </nav>
 
 <script>
@@ -88,11 +153,7 @@
 (function () {
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', function () {
-    if (window.scrollY > 20) {
-      navbar.classList.add('scrolled');
-    } else {
-      navbar.classList.remove('scrolled');
-    }
+    navbar.classList.toggle('scrolled', window.scrollY > 20);
   }, { passive: true });
 })();
 </script>

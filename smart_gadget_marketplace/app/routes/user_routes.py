@@ -9,16 +9,19 @@ user_bp = Blueprint('user', __name__, url_prefix='/user')
 
 # ── Auth Guard ───────────────────────────────────────────────
 def login_required():
+    """Returns a redirect if the user is NOT logged in, else None."""
     if 'user_id' not in session:
+        flash('Please log in to continue.', 'warning')
         return redirect(url_for('auth.login'))
     return None
 
-# ── Home ─────────────────────────────────────────────────────
+def is_logged_in():
+    return 'user_id' in session
+
+# ── Home (PUBLIC) ─────────────────────────────────────────────
 @user_bp.route('/home')
 def home():
-    guard = login_required()
-    if guard: return guard
-
+    # No login_required — anonymous users can see the homepage
     prod_rows = oracle_fetchall(
         "SELECT p.product_id AS pid, p.name AS pname, p.brand AS pbrand, "
         "p.price AS pprice, p.original_price AS orig_price, "
@@ -70,12 +73,11 @@ def home():
 
     return render_template('user/home.html', products=products, reviews=reviews)
 
-# ── Products List ────────────────────────────────────────────
+
+# ── Products List (PUBLIC) ────────────────────────────────────
 @user_bp.route('/products')
 def products():
-    guard = login_required()
-    if guard: return guard
-
+    # No login_required — anonymous users can browse
     search   = request.args.get('q', '').strip()
     category = request.args.get('category', 'All')
 
@@ -121,7 +123,8 @@ def products():
             'reviews':        int(p['rev_count'])    if p['rev_count']  else 0,
         })
 
-    if search:
+    # Only log search for logged-in users (anonymous have no user_id)
+    if search and is_logged_in():
         log_search(session.get('user_id'), search, len(all_products))
 
     cat_rows  = oracle_fetchall("SELECT name AS catname FROM categories ORDER BY name")
@@ -133,12 +136,11 @@ def products():
                            selected_category=category,
                            search_query=search)
 
-# ── Product Detail ───────────────────────────────────────────
+
+# ── Product Detail (PUBLIC) ───────────────────────────────────
 @user_bp.route('/product/<int:product_id>')
 def product_details(product_id):
-    guard = login_required()
-    if guard: return guard
-
+    # No login_required — anyone can view a product
     rows = oracle_fetchall(
         "SELECT p.product_id AS pid, p.name AS pname, p.brand AS pbrand, "
         "p.price AS pprice, p.original_price AS orig_price, "
@@ -174,6 +176,7 @@ def product_details(product_id):
         "UPDATE products SET views = views + 1 WHERE product_id = :1",
         [product_id]
     )
+    # Log view for both logged-in and anonymous (user_id may be None)
     log_activity('product_view', {
         'user_id':      session.get('user_id'),
         'product_id':   product_id,
@@ -223,14 +226,16 @@ def product_details(product_id):
                            related=related,
                            reviews=product_reviews)
 
-# ── Cart ─────────────────────────────────────────────────────
+
+# ── Cart (LOGIN REQUIRED) ─────────────────────────────────────
 @user_bp.route('/cart')
 def cart():
     guard = login_required()
     if guard: return guard
     return render_template('user/cart.html')
 
-# ── Checkout ─────────────────────────────────────────────────
+
+# ── Checkout (LOGIN REQUIRED) ─────────────────────────────────
 @user_bp.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     guard = login_required()
@@ -259,7 +264,8 @@ def checkout():
 
     return render_template('user/checkout.html')
 
-# ── Profile ──────────────────────────────────────────────────
+
+# ── Profile (LOGIN REQUIRED) ──────────────────────────────────
 @user_bp.route('/profile', methods=['GET', 'POST'])
 def profile():
     guard = login_required()
@@ -317,7 +323,8 @@ def profile():
 
     return render_template('user/profile.html', user=user_data, orders=orders)
 
-# ── Orders ───────────────────────────────────────────────────
+
+# ── Orders (LOGIN REQUIRED) ───────────────────────────────────
 @user_bp.route('/orders')
 def orders():
     guard = login_required()
@@ -355,7 +362,8 @@ def orders():
 
     return render_template('user/orders.html', orders=all_orders)
 
-# ── Wishlist ─────────────────────────────────────────────────
+
+# ── Wishlist view (LOGIN REQUIRED) ────────────────────────────
 @user_bp.route('/wishlist')
 def wishlist():
     guard = login_required()
@@ -386,6 +394,8 @@ def wishlist():
         })
     return render_template('user/wishlist.html', products=items)
 
+
+# ── Wishlist add (LOGIN REQUIRED) ─────────────────────────────
 @user_bp.route('/wishlist/add/<int:product_id>', methods=['POST'])
 def add_to_wishlist(product_id):
     guard = login_required()
@@ -399,6 +409,8 @@ def add_to_wishlist(product_id):
         pass
     return redirect(request.referrer or url_for('user.products'))
 
+
+# ── Wishlist remove (LOGIN REQUIRED) ─────────────────────────
 @user_bp.route('/wishlist/remove/<int:product_id>', methods=['POST'])
 def remove_from_wishlist(product_id):
     guard = login_required()
@@ -409,7 +421,8 @@ def remove_from_wishlist(product_id):
     )
     return redirect(url_for('user.wishlist'))
 
-# ── Ratings ──────────────────────────────────────────────────
+
+# ── Ratings (LOGIN REQUIRED) ──────────────────────────────────
 @user_bp.route('/ratings', methods=['GET', 'POST'])
 def ratings():
     guard = login_required()

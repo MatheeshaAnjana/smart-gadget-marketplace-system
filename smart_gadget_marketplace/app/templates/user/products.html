@@ -11,7 +11,7 @@
 <section class="products-page">
   <div class="container">
 
-    <!-- Search & Filter Form — posts to Flask backend -->
+    <!-- Search & Filter Form -->
     <form method="GET" action="{{ url_for('user.products') }}" id="filterForm">
       <div class="products-toolbar">
         <div class="toolbar-left">
@@ -55,7 +55,7 @@
       </div>
     </form>
 
-    <!-- Active Filters Display -->
+    <!-- Active Filters -->
     {% if search_query or selected_category != 'All' %}
     <div class="active-filters" style="margin-bottom:16px;">
       <span style="font-size:0.85rem;color:#64748b;">Showing results for: </span>
@@ -87,12 +87,19 @@
           <span class="product-badge">{{ product.badge }}</span>
         {% endif %}
 
-        <!-- Wishlist Button — POST to backend -->
+        {# ── Wishlist button: POST if logged in, redirect to login if not ── #}
+        {% if session.get('user_id') %}
         <form method="POST" action="{{ url_for('user.add_to_wishlist', product_id=product.id) }}" style="display:inline">
           <button type="submit" class="wishlist-btn" title="Add to Wishlist">
             <i class="far fa-heart"></i>
           </button>
         </form>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}?next={{ request.path }}"
+           class="wishlist-btn" title="Login to add to Wishlist">
+          <i class="far fa-heart"></i>
+        </a>
+        {% endif %}
 
         <div class="product-image-wrap">
           <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy"/>
@@ -125,6 +132,8 @@
               {% endif %}
             </div>
             <div style="display:flex;gap:6px;">
+              {# Add to cart: works locally (JS localStorage) for all users; #}
+              {# checkout will require login when they actually try to pay    #}
               <button class="add-cart-btn"
                       onclick="addToCart({{ product.id }}, '{{ product.name|replace("'","") }}', {{ product.price }}, '{{ product.image }}')"
                       title="Add to Cart"
@@ -144,7 +153,6 @@
     </div>
 
     {% else %}
-    <!-- Empty State -->
     <div class="empty-state">
       <i class="fas fa-search"></i>
       <h3>No products found</h3>
@@ -160,29 +168,24 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/products.js') }}"></script>
 <script>
-// Submit search form on Enter
 document.getElementById('productSearch').addEventListener('keypress', function(e) {
-  if (e.key === 'Enter') {
-    document.getElementById('filterForm').submit();
-  }
+  if (e.key === 'Enter') document.getElementById('filterForm').submit();
 });
 
-// Client-side sort (sorts the already-rendered cards)
 function sortProducts(val) {
   const container = document.getElementById('productsContainer');
   if (!container) return;
   const cards = Array.from(container.querySelectorAll('.product-card'));
   cards.sort((a, b) => {
-    if (val === 'price-low')  return parseFloat(a.dataset.price) - parseFloat(b.dataset.price);
-    if (val === 'price-high') return parseFloat(b.dataset.price) - parseFloat(a.dataset.price);
+    if (val === 'price-low')  return parseFloat(a.dataset.price)  - parseFloat(b.dataset.price);
+    if (val === 'price-high') return parseFloat(b.dataset.price)  - parseFloat(a.dataset.price);
     if (val === 'rating')     return parseFloat(b.dataset.rating) - parseFloat(a.dataset.rating);
-    if (val === 'popular')    return parseInt(b.dataset.views) - parseInt(a.dataset.views);
+    if (val === 'popular')    return parseInt(b.dataset.views)    - parseInt(a.dataset.views);
     return 0;
   });
   cards.forEach(c => container.appendChild(c));
 }
 
-// Grid / List view toggle
 function setView(type) {
   const container = document.getElementById('productsContainer');
   if (!container) return;

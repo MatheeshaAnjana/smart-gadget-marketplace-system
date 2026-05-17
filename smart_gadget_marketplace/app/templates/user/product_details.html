@@ -91,18 +91,26 @@
 
       <!-- Actions -->
       <div class="detail-actions">
+        {# Add to Cart — works for everyone; checkout enforces login #}
         <button class="btn-primary"
                 onclick="addToCart({{ product.id }}, '{{ product.name|replace("'","") }}', {{ product.price }}, '{{ product.image }}')"
                 {% if product.stock == 0 %}disabled style="opacity:0.5;cursor:not-allowed"{% endif %}>
           <i class="fas fa-cart-plus"></i> Add to Cart
         </button>
 
-        <!-- Wishlist POST form -->
+        {# Wishlist — login required #}
+        {% if session.get('user_id') %}
         <form method="POST" action="{{ url_for('user.add_to_wishlist', product_id=product.id) }}" style="display:inline">
           <button type="submit" class="wishlist-btn-lg" title="Add to Wishlist">
             <i class="far fa-heart"></i>
           </button>
         </form>
+        {% else %}
+        <a href="{{ url_for('auth.login') }}?next={{ request.path }}"
+           class="wishlist-btn-lg" title="Login to add to Wishlist">
+          <i class="far fa-heart"></i>
+        </a>
+        {% endif %}
       </div>
 
       <div class="seller-info">
@@ -150,7 +158,7 @@
       </table>
     </div>
 
-    <!-- Reviews from Oracle DB -->
+    <!-- Reviews -->
     <div class="tab-content" id="tab-reviews">
       <div class="reviews-summary">
         <div class="avg-rating">
@@ -190,8 +198,10 @@
       {% endif %}
     </div>
 
-    <!-- Write a Review — POST to Oracle DB -->
+    <!-- Write a Review -->
     <div class="tab-content" id="tab-write-review">
+      {% if session.get('user_id') %}
+      {# Logged in — show the form #}
       <h3 style="margin-bottom:16px;">Share Your Experience</h3>
       <form method="POST" action="{{ url_for('user.ratings') }}">
         <input type="hidden" name="product_id" value="{{ product.id }}"/>
@@ -214,10 +224,24 @@
           <i class="fas fa-paper-plane"></i> Submit Review
         </button>
       </form>
+      {% else %}
+      {# Anonymous — prompt to login #}
+      <div style="text-align:center;padding:40px 20px;">
+        <i class="fas fa-lock" style="font-size:2.5rem;color:#cbd5e1;display:block;margin-bottom:16px;"></i>
+        <h3 style="color:#374151;margin-bottom:8px;">Login to Write a Review</h3>
+        <p style="color:#64748b;margin-bottom:24px;">Share your experience with this product after logging in.</p>
+        <a href="{{ url_for('auth.login') }}?next={{ request.path }}" class="btn-primary">
+          <i class="fas fa-sign-in-alt"></i> Login to Review
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="btn-outline" style="margin-left:12px;">
+          <i class="fas fa-user-plus"></i> Create Account
+        </a>
+      </div>
+      {% endif %}
     </div>
   </div>
 
-  <!-- Related Products from Oracle DB -->
+  <!-- Related Products -->
   {% if related %}
   <div class="related-products">
     <h3>Related Products</h3>
@@ -266,27 +290,23 @@ function changeImage(el) {
   el.classList.add('active');
   document.getElementById('mainImg').src = el.src;
 }
-
 function changeQty(delta) {
   const input = document.getElementById('qty');
   const max   = parseInt(input.max) || 99;
   input.value = Math.min(max, Math.max(1, parseInt(input.value) + delta));
 }
-
 function showTab(tab, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   if (btn) btn.classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
 }
-
 function selectStar(val) {
   document.getElementById('ratingInput').value = val;
   document.querySelectorAll('#starSelect .fa-star').forEach((s, i) => {
     s.style.color = i < val ? '#f59e0b' : '#d1d5db';
   });
 }
-// Default: highlight 5 stars
 selectStar(5);
 </script>
 {% endblock %}

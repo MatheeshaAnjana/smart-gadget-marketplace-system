@@ -13,11 +13,12 @@ def is_logged_in():
 # ── Index ────────────────────────────────────────────────────
 @auth_bp.route('/')
 def index():
+    # Everyone (logged-in or anonymous) goes straight to the marketplace homepage
     if is_logged_in():
         if session.get('role') == 'admin':
             return redirect(url_for('admin.dashboard'))
-        return redirect(url_for('user.home'))
-    return redirect(url_for('auth.login'))
+    # Anonymous users also land on the public home page
+    return redirect(url_for('user.home'))
 
 # ── Login ────────────────────────────────────────────────────
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -25,12 +26,15 @@ def login():
     if is_logged_in():
         return redirect(url_for('auth.index'))
 
+    # Where to go after login — passed as ?next=/user/cart etc.
+    next_url = request.args.get('next', '')
     error = None
 
     if request.method == 'POST':
         form_email    = request.form.get('email', '').strip().lower()
         form_password = request.form.get('password', '')
         form_role     = request.form.get('role', 'user')
+        next_url      = request.form.get('next', '')
 
         if not form_email or not form_password:
             error = 'Please fill in all fields.'
@@ -81,9 +85,12 @@ def login():
                     'user_name': u['cname'],
                     'role':      'user'
                 })
+                # Redirect to the page they were trying to reach, or home
+                if next_url and next_url.startswith('/'):
+                    return redirect(next_url)
                 return redirect(url_for('user.home'))
 
-    return render_template('auth/login.html', error=error)
+    return render_template('auth/login.html', error=error, next_url=next_url)
 
 # ── Register ─────────────────────────────────────────────────
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -143,4 +150,5 @@ def logout():
             'role':      session.get('role')
         })
     session.clear()
-    return redirect(url_for('auth.login'))
+    # After logout, go back to public homepage (not login page)
+    return redirect(url_for('user.home'))

@@ -195,6 +195,49 @@
 }
 .nav-logout:hover { color: var(--danger); background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); transform: translateY(-1px); }
 
+/* ── Anonymous nav buttons ── */
+.nav-btn-login {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  font-size: 0.82rem; font-weight: 600;
+  color: var(--primary);
+  background: rgba(14,165,233,0.08);
+  border: 1.5px solid rgba(14,165,233,0.25);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  white-space: nowrap;
+}
+.nav-btn-login:hover {
+  background: rgba(14,165,233,0.15);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14,165,233,0.2);
+}
+
+.nav-btn-register {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.4rem 1rem;
+  border-radius: 100px;
+  font-size: 0.82rem; font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 14px rgba(14,165,233,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+  white-space: nowrap;
+  position: relative; overflow: hidden;
+}
+.nav-btn-register::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%);
+  pointer-events: none;
+}
+.nav-btn-register:hover {
+  background: linear-gradient(135deg, #38bdf8, var(--primary));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14,165,233,0.45);
+}
+
 /* Hamburger */
 .hamburger { display: none; flex-direction: column; gap: 4px; padding: 4px; }
 .hamburger span { display: block; width: 20px; height: 2px; background: var(--gray-700); border-radius: 2px; transition: var(--transition); }
