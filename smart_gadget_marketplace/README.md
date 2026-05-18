@@ -132,4 +132,4 @@ smart_gadget_marketplace/
 
 ---
 
-Built with ❤️ — Flask + Vanilla JS + CSS3
+Built with ❤️ — Flask + Vanilla JS + CSS3.
